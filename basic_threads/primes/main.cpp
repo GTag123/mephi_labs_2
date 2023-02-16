@@ -4,7 +4,7 @@
 #include <vector>
 #include <thread>
 #include <iostream>
-
+using namespace std;
 constexpr uint64_t limit = 10000000;
 constexpr size_t expectedPrimesCount = 664579;
 constexpr size_t expectedMaxPrimeNumber = 9999991;
@@ -15,6 +15,7 @@ void ThreadFunction(PrimeNumbersSet& primes, uint64_t from, uint64_t to) {
 
 void CheckProperties(const PrimeNumbersSet& primes) {
     std::cout << "Has " << primes.GetPrimesCountInRange(0, limit) << " prime numbers\n";
+    cout << "Line 18: " << primes.GetPrimesCountInRange(0, limit) << endl;
     assert(primes.GetPrimesCountInRange(0, limit) == expectedPrimesCount);
     assert(!primes.IsPrime(0));
     assert(!primes.IsPrime(1));
@@ -71,6 +72,8 @@ int main() {
         std::cout << "Total waited for mutex: " << std::chrono::duration_cast<std::chrono::seconds>(primes.GetTotalTimeWaitingForMutex()).count() << std::endl;
         std::cout << "Total time under mutex: " << std::chrono::duration_cast<std::chrono::seconds>(primes.GetTotalTimeUnderMutex()).count() << std::endl;
         CheckProperties(primes);
+        cout << chrono::duration_cast<chrono::seconds>(primes.GetTotalTimeWaitingForMutex()).count() << endl;
+        cout << chrono::duration_cast<chrono::seconds>(primes.GetTotalTimeUnderMutex()).count() << endl;
         assert(primes.GetTotalTimeWaitingForMutex() >= 4s);
         assert(primes.GetTotalTimeWaitingForMutex() > primes.GetTotalTimeUnderMutex());
     }
@@ -87,6 +90,9 @@ int main() {
         std::cout << "Total waited for mutex: " << std::chrono::duration_cast<std::chrono::seconds>(primes.GetTotalTimeWaitingForMutex()).count() << std::endl;
         std::cout << "Total time under mutex: " << std::chrono::duration_cast<std::chrono::seconds>(primes.GetTotalTimeUnderMutex()).count() << std::endl;
         CheckProperties(primes);
+        cout << chrono::duration_cast<chrono::milliseconds>(duration).count() << endl;
+        cout << chrono::duration_cast<chrono::milliseconds>(multithreadDuration).count() << endl;
+        cout << chrono::duration_cast<chrono::milliseconds>(primes.GetTotalTimeWaitingForMutex()).count() << endl;
         assert(duration >= multithreadDuration * 1.3);
         assert(primes.GetTotalTimeWaitingForMutex() < 2s);
     }
