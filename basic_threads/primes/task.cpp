@@ -30,6 +30,7 @@ uint64_t PrimeNumbersSet::GetNextPrime(uint64_t number) const {
 }
 
 void PrimeNumbersSet::AddPrimesInRange(uint64_t from, uint64_t to) {
+
     for (auto i = from; i < to; ++i) {
         if (IsPrime(i)){
             auto start = std::chrono::steady_clock::now();
@@ -41,7 +42,9 @@ void PrimeNumbersSet::AddPrimesInRange(uint64_t from, uint64_t to) {
             primes_.insert(i);
             set_mutex_.unlock();
             end = std::chrono::steady_clock::now();
+            set_mutex_.lock();
             nanoseconds_under_mutex_ += (end - start).count();
+            set_mutex_.unlock();
         }
     }
 }
