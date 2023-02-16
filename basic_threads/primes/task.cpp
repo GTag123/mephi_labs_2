@@ -1,5 +1,6 @@
 #include "task.h"
 #include "cmath"
+#include "algorithm"
 
 PrimeNumbersSet::PrimeNumbersSet() = default;
 
