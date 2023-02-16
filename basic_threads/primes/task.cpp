@@ -36,11 +36,11 @@ uint64_t PrimeNumbersSet::GetNextPrime(uint64_t number) const {
 
 
 void PrimeNumbersSet::AddPrimesInRange(uint64_t from, uint64_t to) {
-    std::set<uint64_t> localprimes;
+    std::vector<uint64_t> localprimes;
 
     for (auto i = from; i < to; ++i) {
         if (IsPrime(i)){
-            localprimes.insert(i);
+            localprimes.push_back(i);
         }
     }
 
@@ -60,6 +60,28 @@ void PrimeNumbersSet::AddPrimesInRange(uint64_t from, uint64_t to) {
     set_mutex_.unlock();
 
 }
+//void PrimeNumbersSet::AddPrimesInRange(uint64_t from, uint64_t to) {
+//    std::vector<uint64_t> local;
+//    for(uint64_t it = from; it<to; ++it){
+//        bool flag = true;
+//        for(int i = 2;i*i<=it; ++i){
+//            if(it%i ==0){
+//                flag = false;
+//                break;}
+//        }
+//        if (flag and it!= 0 and it!=1){
+//            local.push_back(it);
+//            auto start_func = std::chrono::high_resolution_clock::now();
+//            set_mutex_.lock();
+//            auto start_lock = std::chrono::high_resolution_clock::now();
+//            nanoseconds_waiting_mutex_  += (start_lock - start_func).count();
+//            primes_.insert(it);
+//            auto end_lock = std::chrono::high_resolution_clock::now();
+//            set_mutex_.unlock();
+//            nanoseconds_under_mutex_ += (end_lock - start_lock).count();
+//        }
+//    }
+//}
 //void PrimeNumbersSet::AddPrimesInRange(uint64_t from, uint64_t to) {
 //    for (auto i = from; i < to; ++i) {
 //        if (IsPrime(i)){
@@ -106,6 +128,7 @@ uint64_t PrimeNumbersSet::GetMaxPrimeNumber() const {
     if (primes_.size() == 0) {
         return 0;
     }
+
     return *(primes_.rbegin());
 }
 
