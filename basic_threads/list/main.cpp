@@ -40,7 +40,7 @@ void ThreadFunction(ThreadSafeList<ListItem>& list) {
                     std::lock_guard<std::mutex> guard(coutMutex);
                     std::cout << "Thread " << thread_id << " first reached sum " << sum << std::endl;
                 }
-                std::this_thread::sleep_for(10ms * counter / partSize);
+                std::this_thread::sleep_for(20ms * counter / partSize);
             } else {
                 std::lock_guard<std::mutex> guard(coutMutex);
                 std::cout << "Thread " << thread_id << " reached sum " << sum << std::endl;
