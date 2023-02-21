@@ -2,6 +2,7 @@
 #include "cmath"
 #include "algorithm"
 #include "iostream"
+#include "vector"
 PrimeNumbersSet::PrimeNumbersSet() {
     this->nanoseconds_under_mutex_ = 0;
     this->nanoseconds_waiting_mutex_ = 0;
