@@ -16,8 +16,8 @@ struct ListItem {
     std::list<std::thread::id> reachOrder;
 };
 
-constexpr size_t elementsCount = 1000;
-std::mutex mtx_;
+constexpr size_t elementsCount = 1000000;
+
 void ThreadFunction(ThreadSafeList<ListItem>& list) {
     const auto thread_id = std::this_thread::get_id();
     {
@@ -45,7 +45,6 @@ void ThreadFunction(ThreadSafeList<ListItem>& list) {
                 std::lock_guard<std::mutex> guard(coutMutex);
                 std::cout << "Thread " << thread_id << " reached sum " << sum << std::endl;
             }
-
         }
     }
     {
@@ -56,7 +55,6 @@ void ThreadFunction(ThreadSafeList<ListItem>& list) {
 
 int main() {
     assert(std::thread::hardware_concurrency() > 1);
-//    const size_t threadsCount = 1;
     const size_t threadsCount = std::min(std::max(std::thread::hardware_concurrency() + 1, 4U), 8U);
     std::cout << "Max concurrent threads: " << std::thread::hardware_concurrency() << std::endl;
     std::cout << "Threads to be created: " << threadsCount << std::endl;
@@ -74,7 +72,6 @@ int main() {
             threads.emplace_back([&list, threadsCount, i](){
                 std::mt19937_64 random(i);
                 for (size_t j = 0; j < (elementsCount / threadsCount); ++j) {
-//                    std::cout << "Thread " << i << ", j: " << j << std::endl;
                     list.insert(list.end(), {.value=random() % 10});
                 }
             });
@@ -119,10 +116,9 @@ int main() {
             ++count;
             std::cout << "Checkpoint #" << count << " threads order:\n";
             for (auto thread : it->reachOrder) {
-                std::cout << "Thread:: " << thread << '\t';
+                std::cout << thread << '\t';
             }
             std::cout << std::endl;
-
             assert(it->reachOrder != prevReachOrder);
             prevReachOrder = it->reachOrder;
         }

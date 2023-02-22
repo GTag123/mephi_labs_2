@@ -15,10 +15,11 @@
 
 template<typename T>
 struct TNode {
-    std::atomic<T> value;
+    T value;
     TNode<T> *next;
     TNode<T> *prev;
     mutable std::shared_mutex mutex_;
+    std::atomic<bool> isRefLocked = false;
 
     TNode(T v, TNode<T> *n, TNode<T> *p) : value(std::move(v)), next(std::move(n)), prev(std::move(p)) {}
 
@@ -57,60 +58,86 @@ public:
         using difference_type = std::ptrdiff_t;
         using iterator_category = std::bidirectional_iterator_tag;
 
-        Iterator(TNode<T> *current) : curr_(std::move(current)) {};
+        Iterator(TNode<T> *current) : curr_(std::move(current)) {
+//            curr_->mutex_.lock();
+        };
+        ~Iterator(){
+            if (curr_ != nullptr){
+                if (curr_->isRefLocked) curr_->isRefLocked = false;
+                curr_->mutex_.unlock();
+            }
+        }
 
         T& operator*() {
-            // хзхз
-            std::unique_lock<std::shared_mutex> ulock(curr_->mutex_);
+
+//            std::cout << "T& operator*" << std::endl;
+//            curr_->isRefOperator = true;
+            curr_->mutex_.lock();
+            curr_->isRefLocked = true;
+//            std::unique_lock<std::shared_mutex> ulock(curr_->mutex_);
             return (curr_->value);
+
         }
 
         T operator*() const {
+//            std::cout << "T operator*" << std::endl;
             std::shared_lock<std::shared_mutex> common_lock(curr_->mutex_);
             return curr_->value;
         }
 
-        T* operator->() {
-            std::unique_lock<std::shared_mutex> ulock(curr_->mutex_);
-            return &(curr_->value);
-        }
+//        T* operator->() {
+////            std::cout << "T* operator->" << std::endl;
+//            std::unique_lock<std::shared_mutex> ulock(curr_->mutex_);
+//            return &(curr_->value);
+//        }
 
         const T* operator->() const {
+//            std::cout << "const T* operator->" << std::endl;
+
             std::shared_lock<std::shared_mutex> common_lock(curr_->mutex_);
             return &(curr_->value);
         }
 
         Iterator &operator++() {
-            std::unique_lock<std::shared_mutex> ulock(curr_->mutex_);
-            curr_ = curr_->next;
-            return *this;
+//            std::cout << "It operator++" << std::endl;
+            if (curr_->isRefLocked){
+                curr_->isRefLocked = false;
+                auto prev = curr_;
+                curr_ = curr_->next;
+                prev->mutex_.unlock();
+                return *this;
+            } else {
+                std::shared_lock<std::shared_mutex> common_lock(curr_->mutex_);
+                curr_ = curr_->next;
+                return *this;
+            }
         }
+//        Iterator operator++(int) {
+////            std::cout << "Operator++(int)" << std::endl;
+//            std::unique_lock<std::shared_mutex> ulock(curr_->mutex_);
+//            auto old = curr_;
+//            curr_ = curr_->next;
+//            return old;
+//        }
+//
+//        Iterator &operator--() {
+//            std::unique_lock<std::shared_mutex> ulock(curr_->mutex_);
+//            curr_ = curr_->prev;
+//            return *this;
+//        }
+//
+//        Iterator operator--(int) {
+//            std::unique_lock<std::shared_mutex> ulock(curr_->mutex_);
+//            auto old = curr_;
+//            curr_ = curr_->prev;
+//            return old;
+//        }
 
-        Iterator operator++(int) {
-            std::unique_lock<std::shared_mutex> ulock(curr_->mutex_);
-            auto old = curr_;
-            curr_ = curr_->next;
-            return old;
-        }
-
-        Iterator &operator--() {
-            std::unique_lock<std::shared_mutex> ulock(curr_->mutex_);
-            curr_ = curr_->prev;
-            return *this;
-        }
-
-        Iterator operator--(int) {
-            std::unique_lock<std::shared_mutex> ulock(curr_->mutex_);
-            auto old = curr_;
-            curr_ = curr_->prev;
-            return old;
-        }
-
-        bool operator==(const Iterator &rhs) const {
-            if (curr_ == nullptr) return rhs.curr_ == nullptr;
-            std::shared_lock<std::shared_mutex> common_lock(curr_->mutex_);
-            return curr_ == rhs.curr_;
-        }
+//        bool operator==(const Iterator &rhs) const {
+//            if (curr_ == nullptr) return rhs.curr_ == nullptr;
+//            std::shared_lock<std::shared_mutex> common_lock(curr_->mutex_);
+//            return curr_ == rhs.curr_;
+//        }
 
         bool operator!=(const Iterator &rhs) const {
             if (curr_ == nullptr) return rhs.curr_ != nullptr;
