@@ -13,6 +13,7 @@
  * Потокобезопасный связанный список.
  */
 
+
 template<typename T>
 struct TNode {
     T value;
