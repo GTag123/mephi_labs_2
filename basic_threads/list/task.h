@@ -37,6 +37,7 @@ private:
 
     TNode<T> *head = nullptr;
     TNode<T> *tail = nullptr;
+    friend class Iterator;
 
 public:
     ThreadSafeList() {};
@@ -44,6 +45,7 @@ public:
     class Iterator {
     private:
         TNode<T> *curr_;
+        ThreadSafeList& list_;
 
         TNode<T> *getCurrentNode() const {
 //            if (curr_ != nullptr) .lock() по идее итератор используется в одном потоке так что всё должно быть норм
@@ -58,9 +60,10 @@ public:
         using difference_type = std::ptrdiff_t;
         using iterator_category = std::bidirectional_iterator_tag;
 
-        Iterator(TNode<T> *current) : curr_(std::move(current)) {
+        Iterator(TNode<T> *current, ThreadSafeList& list) : curr_(std::move(current)), list_(list) {
 //            curr_->mutex_.lock();
         };
+
         ~Iterator(){
             if (curr_ != nullptr){
                 if (curr_->isRefLocked) curr_->isRefLocked = false;
@@ -120,7 +123,25 @@ public:
 //            return old;
 //        }
 //
-//        Iterator &operator--() {
+        Iterator &operator--() {
+            if (curr_ == nullptr){
+                std::shared_lock<std::shared_mutex> lock(list_.tailListMutex);
+                curr_ = list_.tail;
+                return *this;
+            }
+            if (curr_->isRefLocked){
+                curr_->isRefLocked = false;
+                auto next = curr_;
+                curr_ = curr_->prev;
+                next->mutex_.unlock();
+                return *this;
+            } else {
+                std::shared_lock<std::shared_mutex> common_lock(curr_->mutex_);
+                curr_ = curr_->prev;
+                return *this;
+            }
+        }
+
 //            std::unique_lock<std::shared_mutex> ulock(curr_->mutex_);
 //            curr_ = curr_->prev;
 //            return *this;
@@ -149,13 +170,13 @@ public:
 
     Iterator begin() {
         std::shared_lock<std::shared_mutex> headlock(headListMutex);
-        if (head == nullptr) return Iterator(nullptr);
+        if (head == nullptr) return Iterator(nullptr, *this);
         std::shared_lock<std::shared_mutex> nodelock(head->mutex_);
-        return Iterator(head);
+        return Iterator(head, *this);
     }
 
     Iterator end() {
-        return Iterator(nullptr); // либо tail хз
+        return Iterator(nullptr, *this); // либо tail хз
     }
 
     /*
@@ -214,7 +235,7 @@ public:
     }
 
     void erase(Iterator position) {
-        std::cout << "erase" << std::endl;
+        std::cout << "-----------------erase____________" << std::endl;
 //        delete position.getCurrentNode()->value; я хз где правильнее
         std::unique_lock<std::shared_mutex> uPositionLock(position.getCurrentNode()->mutex_);
         if (position.getCurrentNode()->prev != nullptr) {
