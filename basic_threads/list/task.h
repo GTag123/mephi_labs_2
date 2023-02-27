@@ -21,22 +21,16 @@ struct TNode {
     TNode<T> *prev;
     mutable std::shared_mutex valuemutex_; // for value and isreflock
     mutable std::shared_mutex nodemutex_; // for prev and next and isDeleted
-//    bool isRefLocked;
     std::atomic<bool> isTail;
-    std::atomic<bool> isDeleted; // попробовать убрать атомики если смогу сделать лабу
+    std::atomic<bool> isDeleted;
     TNode(T v, TNode<T> *n, TNode<T> *p) : value(std::move(v)), next(std::move(n)), prev(std::move(p)) {}
     TNode(TNode<T> *n, TNode<T> *p) : next(std::move(n)), prev(std::move(p)), isTail(true) {}
 
-//    ~TNode() {
-//        mutex_.lock();
-//        mutex_.unlock();
-//    }
 };
 
 template<typename T>
 class ThreadSafeList {
     mutable std::shared_mutex headListMutex;
-//    std::shared_mutex tailListMutex;
 
     TNode<T> *head = nullptr;
     TNode<T> *tail = nullptr;
@@ -50,7 +44,6 @@ public:
     ThreadSafeList(){
         TNode<T>* tail_ = new TNode<T>(nullptr, nullptr);
         std::unique_lock<std::shared_mutex> headlock(headListMutex);
-//        std::unique_lock<std::shared_mutex> taillock(tailListMutex);
         head = tail_;
         tail = tail_;
     }
@@ -73,18 +66,13 @@ public:
                     isLocked = false;
                     curr_->valuemutex_.unlock();
                 }
-                if (curr_->isDeleted) {
+                if (curr_->isDeleted) { // похер на локи, потому что никто уже ничего не делает с удаленной нодой
                     delete curr_;
                 }
             }
-
         }
 
-        TNode<T> getCurrentNode() const{
-            return curr_;
-        }
         T& operator *() {
-//            std::shared_lock<std::shared_mutex> lock(curr_->nodemutex_);
             curr_->valuemutex_.lock();
             isLocked = true;
             return curr_->value;
@@ -106,7 +94,6 @@ public:
         }
 
         Iterator& operator ++() {
-            // если другой поток ++?
             std::unique_lock<std::shared_mutex> lock(curr_->nodemutex_);
             if (isLocked) {
                 isLocked = false;
@@ -116,27 +103,13 @@ public:
             curr_ = curr_->next;
             lock.unlock();
 
-            if (old->isDeleted) {
+            if (old->isDeleted) { // похер на локи, потому что никто уже ничего не делает с удаленной нодой
                 delete old;
             }
             return *this;
-
-//            if (curr_->isRefLocked) {
-//                curr_->isRefLocked = false;
-//                curr_->valuemutex_.unlock();
-//            }
-//            auto old = curr_;
-//            curr_ = curr_->next;
-//            lock.unlock();
-//
-//            if (old->isDeleted) {
-//                delete old;
-//            }
-//            return *this;
         }
 
         Iterator& operator --() {
-            // если другой поток --?
             std::unique_lock<std::shared_mutex> lock(curr_->nodemutex_);
             if (isLocked) {
                 isLocked = false;
@@ -171,21 +144,16 @@ public:
      * Получить итератор, указывающий на "элемент после последнего" элемента в списке
      */
     Iterator end() const {
-//        std::shared_lock<std::shared_mutex> lock(tail->nodemutex_);
         return Iterator(tail);
     }
     Iterator cend() const {
         return Iterator(tail);
-
-
-
     }
     /*
      * Вставить новый элемент в список перед элементом, на который указывает итератор `position`
      */
     void insert(Iterator position, const T& value) {
         std::shared_lock<std::shared_mutex> shHeadLock(headListMutex);
-//        std::shared_lock<std::shared_mutex> shTailLock(tailListMutex); // UNLOCK!
         if (head->isTail && tail->isTail) {
             auto newNode = new TNode<T>(T(value), tail, nullptr);
             shHeadLock.unlock();
@@ -201,7 +169,7 @@ public:
             tail->prev->next = newNode;
             tail->prev = newNode;
         } else {
-            std::cout << "!!!!!!!!!!!!!!!!!!!!!!!SAASFSS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+            // TODO: insert в середину
         }
     }
 
@@ -209,19 +177,10 @@ public:
      * Стереть из списка элемент, на который указывает итератор `position`
      */
     void erase(Iterator& position) {
-        if (position == end()) { // заменить на end()
-            throw std::invalid_argument("position is end()");
-        }
-
         std::unique_lock<std::shared_mutex> lockPosNode(position.curr_->nodemutex_);
-        if (position.curr_->prev != nullptr) {
-            position.curr_->prev->nodemutex_.lock();
-        } else {
-            if (position != begin()) throw std::invalid_argument("position prev is nullptr, but position not begin()");
-            headListMutex.lock();
-        }
-        if (position.curr_->next == nullptr) throw std::invalid_argument("position next is nullptr");
-        position.curr_->next->nodemutex_.lock(); // костыль и будет ошибка
+        if (position.curr_->prev != nullptr) position.curr_->prev->nodemutex_.lock();
+        else headListMutex.lock();
+        position.curr_->next->nodemutex_.lock();
         if (position.curr_->prev != nullptr) {
             position.curr_->prev->next = position.curr_->next;
             position.curr_->prev->nodemutex_.unlock();
@@ -233,6 +192,5 @@ public:
         position.curr_->next->prev = position.curr_->prev;
         position.curr_->isDeleted = true;
         lockPosNode.unlock();
-//        delete position.curr_; // TODO; мб delete после ++ -- и в деструкторе
     }
 };
