@@ -21,11 +21,11 @@ struct TNode {
     TNode<T> *prev;
     mutable std::shared_mutex valuemutex_; // for value and isreflock
     mutable std::shared_mutex nodemutex_; // for prev and next and isDeleted
-    std::atomic<bool> isRefLocked;
+//    bool isRefLocked;
     std::atomic<bool> isTail;
     std::atomic<bool> isDeleted; // попробовать убрать атомики если смогу сделать лабу
-    TNode(T v, TNode<T> *n, TNode<T> *p) : value(std::move(v)), next(std::move(n)), prev(std::move(p)), isRefLocked(false) {}
-    TNode(TNode<T> *n, TNode<T> *p) : next(std::move(n)), prev(std::move(p)), isRefLocked(false), isTail(true) {}
+    TNode(T v, TNode<T> *n, TNode<T> *p) : value(std::move(v)), next(std::move(n)), prev(std::move(p)) {}
+    TNode(TNode<T> *n, TNode<T> *p) : next(std::move(n)), prev(std::move(p)), isTail(true) {}
 
 //    ~TNode() {
 //        mutex_.lock();
@@ -57,6 +57,7 @@ public:
     class Iterator {
         friend class ThreadSafeList;
         TNode<T>* curr_;
+        bool isLocked = false;
     public:
         using pointer = T*;
         using value_type = T;
@@ -68,8 +69,8 @@ public:
 
         ~Iterator(){
             if (curr_ != nullptr) {
-                if (curr_->isRefLocked) {
-                    curr_->isRefLocked = false;
+                if (isLocked) {
+                    isLocked = false;
                     curr_->valuemutex_.unlock();
                 }
                 if (curr_->isDeleted) {
@@ -83,8 +84,9 @@ public:
             return curr_;
         }
         T& operator *() {
+//            std::shared_lock<std::shared_mutex> lock(curr_->nodemutex_);
             curr_->valuemutex_.lock();
-            curr_->isRefLocked = true;
+            isLocked = true;
             return curr_->value;
         }
 
@@ -106,8 +108,8 @@ public:
         Iterator& operator ++() {
             // если другой поток ++?
             std::unique_lock<std::shared_mutex> lock(curr_->nodemutex_);
-            if (curr_->isRefLocked) {
-                curr_->isRefLocked = false;
+            if (isLocked) {
+                isLocked = false;
                 curr_->valuemutex_.unlock();
             }
             auto old = curr_;
@@ -118,13 +120,26 @@ public:
                 delete old;
             }
             return *this;
+
+//            if (curr_->isRefLocked) {
+//                curr_->isRefLocked = false;
+//                curr_->valuemutex_.unlock();
+//            }
+//            auto old = curr_;
+//            curr_ = curr_->next;
+//            lock.unlock();
+//
+//            if (old->isDeleted) {
+//                delete old;
+//            }
+//            return *this;
         }
 
         Iterator& operator --() {
             // если другой поток --?
             std::unique_lock<std::shared_mutex> lock(curr_->nodemutex_);
-            if (curr_->isRefLocked) {
-                curr_->isRefLocked = false;
+            if (isLocked) {
+                isLocked = false;
                 curr_->valuemutex_.unlock();
             }
             auto old = curr_;
@@ -163,7 +178,7 @@ public:
         return Iterator(tail);
 
 
-        
+
     }
     /*
      * Вставить новый элемент в список перед элементом, на который указывает итератор `position`

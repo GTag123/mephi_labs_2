@@ -16,7 +16,7 @@ struct ListItem {
     std::list<std::thread::id> reachOrder;
 };
 
-constexpr size_t elementsCount = 100000;
+constexpr size_t elementsCount = 1000000;
 enum class Event {
     Erase = 0,
     Iterate
