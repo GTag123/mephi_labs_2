@@ -35,7 +35,7 @@ struct TNode {
 
 template<typename T>
 class ThreadSafeList {
-    std::shared_mutex headListMutex;
+    mutable std::shared_mutex headListMutex;
 //    std::shared_mutex tailListMutex;
 
     TNode<T> *head = nullptr;
@@ -145,7 +145,7 @@ public:
     /*
      * Получить итератор, указывающий на первый элемент списка
      */
-    Iterator begin() {
+    Iterator begin() const{
         std::shared_lock<std::shared_mutex> lock(headListMutex);
         return Iterator(head);
     }
@@ -153,7 +153,7 @@ public:
     /*
      * Получить итератор, указывающий на "элемент после последнего" элемента в списке
      */
-    Iterator end() {
+    Iterator end() const{
 //        std::shared_lock<std::shared_mutex> lock(tail->nodemutex_);
         return Iterator(tail);
     }
