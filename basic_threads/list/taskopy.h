@@ -13,239 +13,180 @@
  * Потокобезопасный связанный список.
  */
 
-
+std::atomic<int> destcount = 0;
 template<typename T>
 struct TNode {
     T value;
     TNode<T> *next;
     TNode<T> *prev;
-    mutable std::shared_mutex mutex_;
-    std::atomic<bool> isRefLocked = false;
-
+//    mutable std::shared_mutex valuemutex_; // for value and isreflock
+    mutable std::shared_mutex nodemutex_; // for prev and next and isDeleted
+//    std::atomic<bool> isRefLocked;
+    std::atomic<bool> isTail;
+    std::atomic<bool> isDeleted; // попробовать убрать атомики если смогу сделать лабу
     TNode(T v, TNode<T> *n, TNode<T> *p) : value(std::move(v)), next(std::move(n)), prev(std::move(p)) {}
-
-//    ~TNode() {
-//        mutex_.lock();
-//        mutex_.unlock();
-//    }
+    TNode(TNode<T> *n, TNode<T> *p) : next(std::move(n)), prev(std::move(p)), isTail(true) {}
 };
 
 template<typename T>
 class ThreadSafeList {
-private:
-    std::shared_mutex headListMutex;
-    std::shared_mutex tailListMutex;
+    mutable std::shared_mutex headListMutex;
+//    std::shared_mutex tailListMutex;
 
     TNode<T> *head = nullptr;
     TNode<T> *tail = nullptr;
-
-    friend class Iterator;
-
 public:
-    ThreadSafeList() {};
-
+    /*
+     * Класс-итератор, позволяющий обращаться к элементам списка без необходимости использовать мьютекс.
+     * При этом должен гарантироваться эксклюзивный доступ потока, в котором был создан итератор, к данным, на которые
+     * он указывает.
+     * Итератор, созданный в одном потоке, нельзя использовать в другом.
+     */
+    ThreadSafeList(){
+        TNode<T>* tail_ = new TNode<T>(nullptr, nullptr);
+        std::unique_lock<std::shared_mutex> headlock(headListMutex);
+//        std::unique_lock<std::shared_mutex> taillock(tailListMutex);
+        head = tail_;
+        tail = tail_;
+    }
     class Iterator {
-    private:
-        TNode<T> *curr_;
-        ThreadSafeList &list_;
-
-//        TNode<T> *getCurrentNode() const {
-////            if (curr_ != nullptr) .lock() по идее итератор используется в одном потоке так что всё должно быть норм
-//            return curr_;
-//        }
-        void setCurrentNode(TNode<T> *node) {
-            curr_ = node;
-        }
-
-        friend ThreadSafeList;
+        friend class ThreadSafeList;
+        TNode<T>* curr_;
+        bool isRefLocked = false;
     public:
-        using pointer = T *;
+        using pointer = T*;
         using value_type = T;
-        using reference = T &;
+        using reference = T&;
         using difference_type = std::ptrdiff_t;
         using iterator_category = std::bidirectional_iterator_tag;
 
-        Iterator(TNode<T> *current, ThreadSafeList &list) : curr_(std::move(current)), list_(list) {
-//            curr_->mutex_.lock();
-        };
+        Iterator(TNode<T>* node): curr_(std::move(node)){};
 
-        TNode<T> *getCurrentNode() const {
-//            if (curr_ != nullptr) .lock() по идее итератор используется в одном потоке так что всё должно быть норм
-            return curr_;
-        }
-
-        ~Iterator() {
-            if (curr_ != nullptr) {
-                if (curr_->isRefLocked) {
-                    curr_->isRefLocked = false;
-                    curr_->mutex_.unlock();
-                }
+        ~Iterator(){
+            destcount++;
+//            std::cout << "Destructed " + std::to_string(destcount) << std::endl;
+//            if (curr_ != nullptr) {
+            if (isRefLocked){
+                curr_->nodemutex_.unlock();
             }
+//            }
+
         }
-
-        T &operator*() {
-
-//            std::cout << "T& operator*" << std::endl;
-//            curr_->isRefOperator = true;
-            curr_->mutex_.lock();
-            curr_->isRefLocked = true;
-//            std::unique_lock<std::shared_mutex> ulock(curr_->mutex_);
-            return (curr_->value);
-        }
-
-        T operator*() const {
-            std::cout << "!!!!!!!!!!!!!!T operator*!!!!!!!!!!!!!!!!!!" << std::endl;
-            std::shared_lock<std::shared_mutex> common_lock(curr_->mutex_);
+        T& operator *() {
+            if (!isRefLocked) {
+                curr_->nodemutex_.lock();
+                isRefLocked = true;
+            }
             return curr_->value;
         }
 
-        const T *operator->() const {
-//            std::cout << "const T* operator->" << std::endl;
 
-            std::shared_lock<std::shared_mutex> common_lock(curr_->mutex_);
+        T* operator ->() {
+//            std::shared_lock<std::shared_mutex> lock(curr_->valuemutex_);
             return &(curr_->value);
         }
 
-        Iterator &operator++() {
-//            std::cout << "It operator++" << std::endl;
-            if (curr_->isRefLocked) {
-                curr_->isRefLocked = false;
-                auto prev = curr_;
-                curr_ = curr_->next;
-                prev->mutex_.unlock();
-                return *this;
-            } else {
-                std::shared_lock<std::shared_mutex> common_lock(curr_->mutex_);
-                curr_ = curr_->next;
-                return *this;
+
+        Iterator& operator ++() {
+            if (isRefLocked) {
+//                isRefLocked = false;
+                curr_->nodemutex_.unlock();
+                curr_->next->nodemutex_.lock();
             }
+            curr_ = curr_->next;
+            return *this;
         }
 
-        Iterator &operator--() {
-            if (curr_ == nullptr) {
-                std::shared_lock<std::shared_mutex> lock(list_.tailListMutex);
-                curr_ = list_.tail;
-                return *this;
+        Iterator& operator --() {
+            if (isRefLocked) {
+//                isRefLocked = false;
+                curr_->nodemutex_.unlock();
+                curr_->prev->nodemutex_.lock();
             }
-            if (curr_->isRefLocked) {
-                curr_->isRefLocked = false;
-                auto next = curr_;
-                curr_ = curr_->prev;
-                next->mutex_.unlock();
-                return *this;
-            } else {
-                std::shared_lock<std::shared_mutex> common_lock(curr_->mutex_);
-                curr_ = curr_->prev;
-                return *this;
-            }
+            curr_ = curr_->prev;
+            return *this;
         }
 
-
-        bool operator!=(const Iterator &rhs) const {
-            if (curr_ == nullptr) return rhs.curr_ != nullptr;
-//            std::cout << "until != mutex locked" << std::endl;
-//            std::shared_lock<std::shared_mutex> common_lock(curr_->mutex_);
-//            std::cout << "after != mutex locked" << std::endl;
-            return curr_ != rhs.curr_;
+        bool operator !=(const Iterator& rhs) const {
+            return this->curr_ != rhs.curr_;
         }
-
+        bool operator== (const Iterator& rhs) const {
+            return !operator!=(rhs);
+        }
     };
 
-    Iterator begin() {
-        std::shared_lock<std::shared_mutex> headlock(headListMutex);
-        if (head == nullptr) return Iterator(nullptr, *this);
-//        std::cout << "until begin mutex locked" << std::endl;
-        std::shared_lock<std::shared_mutex> nodelock(head->mutex_);
-//        std::cout << "after begin mutex locked" << std::endl;
-        return Iterator(head, *this);
+    /*
+     * Получить итератор, указывающий на первый элемент списка
+     */
+    Iterator begin() const{
+        std::shared_lock<std::shared_mutex> lock(headListMutex);
+        return Iterator(head);
     }
 
-    Iterator end() {
-        return Iterator(nullptr, *this); // либо tail хз
+    /*
+     * Получить итератор, указывающий на "элемент после последнего" элемента в списке
+     */
+    Iterator end() const{
+//        std::shared_lock<std::shared_mutex> lock(tail->nodemutex_);
+        return Iterator(tail);
+    }
+    Iterator cend() const{
+        return Iterator(tail);
     }
 
     /*
      * Вставить новый элемент в список перед элементом, на который указывает итератор `position`
      */
-    void insert(Iterator position, const T &value) {
+    void insert(Iterator position, const T& value) {
         std::shared_lock<std::shared_mutex> shHeadLock(headListMutex);
-        std::shared_lock<std::shared_mutex> shTailLock(tailListMutex);
-        if (head == nullptr && tail == nullptr) {
+//        std::shared_lock<std::shared_mutex> shTailLock(tailListMutex); // UNLOCK!
+        if (head->isTail && tail->isTail) {
+            auto newNode = new TNode<T>(T(value), tail, nullptr);
             shHeadLock.unlock();
-            shTailLock.unlock();
-            auto newNode = new TNode<T>(T(value), nullptr, nullptr);
-            std::cout << "Created value" << std::endl;
-            std::unique_lock<std::shared_mutex> uHeadLock(headListMutex);
+            std::unique_lock<std::shared_mutex> taillock(tail->nodemutex_);
+            tail->prev = newNode;
+            std::unique_lock<std::shared_mutex> headlock(headListMutex);
             head = newNode;
-            std::cout << "Created value 2" << std::endl;
-            {
-                std::unique_lock<std::shared_mutex> uTailLock(tailListMutex);
-                tail = newNode;
-            }
-            std::cout << "Created value 3" << std::endl;
-            return;
-        }
-//        std::shared_lock<std::shared_mutex> shPositionLock(position.getCurrentNode()->mutex_);
-        if (position.getCurrentNode() == nullptr) {
+        } else if (position == end()){
             shHeadLock.unlock();
-            shTailLock.unlock();
-//            shPositionLock.unlock();
-            std::unique_lock<std::shared_mutex> uTailLock(tailListMutex);
-            auto newNode = new TNode<T>(T(value), nullptr, tail);
-//            std::cout << "Tail2, pos - nullptr" << std::endl;
-            std::unique_lock<std::shared_mutex> uTailElemLock(tail->mutex_);
-            tail->next = newNode;
-            tail = newNode;
+            std::unique_lock<std::shared_mutex> taillock(tail->nodemutex_);
+            std::unique_lock<std::shared_mutex> tailprevlock(tail->prev->nodemutex_);
+            auto newNode = new TNode<T>(T(value), tail, tail->prev);
+            tail->prev->next = newNode;
+            tail->prev = newNode;
         } else {
-            std::cout << "hui" << std::endl;
-//            shPositionLock.unlock();
-            std::unique_lock<std::shared_mutex> uPositionLock(position.getCurrentNode()->mutex_);
-
-            if (position.getCurrentNode()->prev != nullptr) {
-                position.getCurrentNode()->prev->mutex_.lock();
-            }
-            auto newNode = new TNode<T>(T(value), position.getCurrentNode(),
-                                        position.getCurrentNode()->prev);
-            std::unique_lock<std::shared_mutex> uNewNodeLock(newNode->mutex_);
-
-            if (position != this->begin()) { // вроде безопасно
-                position.getCurrentNode()->prev->next = newNode;
-            } else {
-                std::unique_lock<std::shared_mutex> uHeadLock(headListMutex);
-                head = newNode;
-            }
-            if (position.getCurrentNode()->prev != nullptr) position.getCurrentNode()->prev->mutex_.unlock();
-            position.getCurrentNode()->prev = newNode;
+            std::cout << "!!!!!!!!!!!!!!!!!!!!!!!SAASFSS!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
         }
     }
 
-    void erase(Iterator position) {
-        std::cout << "352676-----------------erase____________" << std::endl;
-//        delete position.getCurrentNode()->value; я хз где правильнее
-        if (position.getCurrentNode() == nullptr) return;
-        bool isPossibleLockPos = position.getCurrentNode()->mutex_.try_lock();
-        if (!isPossibleLockPos) {
-            std::cout << "Уже локнут" << std::endl;
-//            position.getCurrentNode()->mutex_.unlock();
+    /*
+     * Стереть из списка элемент, на который указывает итератор `position`
+     */
+    void erase(Iterator& position) {
+        if (position == end()) { // заменить на end()
+            throw std::invalid_argument("position is end()");
         }
-//        std::unique_lock<std::shared_mutex> uPositionLock(position.getCurrentNode()->mutex_);
-        if (position.getCurrentNode()->prev != nullptr) {
-            std::unique_lock<std::shared_mutex> uPositionPrevLock(position.getCurrentNode()->prev->mutex_);
-            position.getCurrentNode()->prev->next = position.getCurrentNode()->next;
+
+        std::unique_lock<std::shared_mutex> lockPosNode(position.curr_->nodemutex_);
+        if (position.curr_->prev != nullptr) {
+            position.curr_->prev->nodemutex_.lock();
         } else {
-            std::unique_lock<std::shared_mutex> uHeadLock(headListMutex);
-            head = position.getCurrentNode()->next;
+            if (position != begin()) throw std::invalid_argument("position prev is nullptr, but position not begin()");
+            headListMutex.lock();
         }
-        if (position.getCurrentNode()->next != nullptr) {
-            std::unique_lock<std::shared_mutex> uPositionNextLock(position.getCurrentNode()->next->mutex_);
-            position.getCurrentNode()->next->prev = position.getCurrentNode()->prev;
+        if (position.curr_->next == nullptr) throw std::invalid_argument("position next is nullptr");
+        position.curr_->next->nodemutex_.lock(); // костыль и будет ошибка
+        if (position.curr_->prev != nullptr) {
+            position.curr_->prev->next = position.curr_->next;
+            position.curr_->prev->nodemutex_.unlock();
         } else {
-            std::unique_lock<std::shared_mutex> uTailLock(tailListMutex);
-            tail = position.getCurrentNode()->prev;
+            head = position.curr_->next;
+            headListMutex.unlock();
         }
-        position.getCurrentNode()->mutex_.unlock();
-        position.setCurrentNode(nullptr);
-//        delete position.getCurrentNode(); // утечка блять
-//        uPositionLock.unlock();
+        position.curr_->next->nodemutex_.unlock();
+        position.curr_->next->prev = position.curr_->prev;
+        position.curr_->isDeleted = true;
+        lockPosNode.unlock();
+//        delete position.curr_; // TODO; мб delete после ++ -- и в деструкторе
     }
 };

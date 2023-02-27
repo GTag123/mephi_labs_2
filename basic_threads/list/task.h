@@ -112,6 +112,8 @@ public:
             }
             auto old = curr_;
             curr_ = curr_->next;
+            lock.unlock();
+
             if (old->isDeleted) {
                 delete old;
             }
@@ -145,7 +147,7 @@ public:
     /*
      * Получить итератор, указывающий на первый элемент списка
      */
-    Iterator begin() const{
+    Iterator begin() const {
         std::shared_lock<std::shared_mutex> lock(headListMutex);
         return Iterator(head);
     }
@@ -153,14 +155,13 @@ public:
     /*
      * Получить итератор, указывающий на "элемент после последнего" элемента в списке
      */
-    Iterator end() const{
+    Iterator end() const {
 //        std::shared_lock<std::shared_mutex> lock(tail->nodemutex_);
         return Iterator(tail);
     }
-    Iterator cend() const{
+    Iterator cend() const {
         return Iterator(tail);
     }
-
     /*
      * Вставить новый элемент в список перед элементом, на который указывает итератор `position`
      */

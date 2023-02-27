@@ -16,7 +16,7 @@ struct ListItem {
     std::list<std::thread::id> reachOrder;
 };
 
-constexpr size_t elementsCount = 1000000;
+constexpr size_t elementsCount = 100000;
 enum class Event {
     Erase = 0,
     Iterate
@@ -25,7 +25,7 @@ enum class Event {
 std::list<Event> events;
 std::mutex eventsMutex;
 
-void ThreadFunction(ThreadSafeList<ListItem>& list) {
+void ThreadFunction(ThreadSafeList<ListItem> &list) {
     const auto thread_id = std::this_thread::get_id();
     {
         std::lock_guard<std::mutex> guard(coutMutex);
@@ -37,9 +37,12 @@ void ThreadFunction(ThreadSafeList<ListItem>& list) {
     uint64_t sum = 0;
     size_t counter = 0;
 
-    for (ListItem& item : list) {
+    for (ListItem &item: list) {
         sum += item.value;
         ++counter;
+        if (counter == 591) {
+            std::cout << std::endl;
+        }
         if (counter % partSize == 0) {
             item.reachOrder.push_back(thread_id);
             if (item.reachOrder.size() == 1) {
@@ -64,7 +67,7 @@ void ThreadFunction(ThreadSafeList<ListItem>& list) {
     }
 }
 
-void EraseThreadFunction(ThreadSafeList<ListItem>& list) {
+void EraseThreadFunction(ThreadSafeList<ListItem> &list) {
     const auto thread_id = std::this_thread::get_id();
     size_t counter = 0;
     const size_t partSize = (elementsCount / 10);
@@ -104,7 +107,7 @@ int main() {
         const std::chrono::time_point startTime = std::chrono::high_resolution_clock::now();
         std::vector<std::thread> threads;
         for (size_t i = 0; i < threadsCount; ++i) {
-            threads.emplace_back([&list, threadsCount, i](){
+            threads.emplace_back([&list, threadsCount, i]() {
                 std::mt19937_64 random(i);
                 for (size_t j = 0; j < (elementsCount / threadsCount); ++j) {
                     list.insert(list.end(), {.value=random() % 10});
@@ -112,7 +115,7 @@ int main() {
             });
         }
 
-        for (auto &thread : threads) {
+        for (auto &thread: threads) {
             thread.join();
         }
 
@@ -120,10 +123,11 @@ int main() {
         const std::chrono::duration duration = finishTime - startTime;
         multithreadDuration = std::chrono::duration_cast<std::chrono::seconds>(duration);
 
-        std::cout << threads.size() << " threads have run in " << multithreadDuration.count() << " seconds" << std::endl;
+        std::cout << threads.size() << " threads have run in " << multithreadDuration.count() << " seconds"
+                  << std::endl;
 
         size_t realElementsCount = 0;
-        for (const auto& item : list) {
+        for (const auto &item: list) {
             std::ignore = item;
             ++realElementsCount;
         }
@@ -141,7 +145,7 @@ int main() {
         }
         threads.emplace_back(EraseThreadFunction, std::ref(list));
 
-        for (auto &thread : threads) {
+        for (auto &thread: threads) {
             thread.join();
         }
 
@@ -149,10 +153,11 @@ int main() {
         const std::chrono::duration duration = finishTime - startTime;
         multithreadDuration = std::chrono::duration_cast<std::chrono::seconds>(duration);
 
-        std::cout << threads.size() << " threads have run in " << multithreadDuration.count() << " seconds" << std::endl;
+        std::cout << threads.size() << " threads have run in " << multithreadDuration.count() << " seconds"
+                  << std::endl;
 
         size_t realElementsCount = 0;
-        for (const auto& item : list) {
+        for (const auto &item: list) {
             std::ignore = item;
             ++realElementsCount;
         }
@@ -184,7 +189,7 @@ int main() {
         if (!it->reachOrder.empty()) {
             ++count;
             std::cout << "Checkpoint #" << count << " threads order:\n";
-            for (auto thread : it->reachOrder) {
+            for (auto thread: it->reachOrder) {
                 std::cout << thread << '\t';
             }
             std::cout << std::endl;
