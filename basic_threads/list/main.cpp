@@ -16,7 +16,7 @@ struct ListItem {
     std::list<std::thread::id> reachOrder;
 };
 
-constexpr size_t elementsCount = 1000000;
+constexpr size_t elementsCount = 500000;
 enum class Event {
     Erase = 0,
     Iterate
@@ -40,9 +40,6 @@ void ThreadFunction(ThreadSafeList<ListItem> &list) {
     for (ListItem &item: list) {
         sum += item.value;
         ++counter;
-        if (counter == 591) {
-            std::cout << std::endl;
-        }
         if (counter % partSize == 0) {
             item.reachOrder.push_back(thread_id);
             if (item.reachOrder.size() == 1) {
