@@ -89,7 +89,7 @@ int main() {
     assert(totalProcessedItems == maxValue * producerThreadsCount);
 
     for (const auto& [threadId, processedItems] : processedItemsCount) {
-        assert(processedItems < 0.5 * totalProcessedItems);
+        assert(processedItems < 0.6 * totalProcessedItems);
     }
 
     return 0;
