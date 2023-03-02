@@ -62,7 +62,8 @@ int main() {
 
     const size_t processorThreadsCount = (threadsCount - 1) / 2;
     const size_t producerThreadsCount = threadsCount - processorThreadsCount - 1;
-
+    std::cout << "processorThreadsCount: " << processorThreadsCount << std::endl;
+    std::cout << "producerThreadsCount: " << producerThreadsCount << std::endl;
     assert(processorThreadsCount > 1);
     assert(producerThreadsCount > 1);
 
