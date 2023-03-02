@@ -32,15 +32,8 @@ public:
         std::unique_lock lock(mutex_);
         while (data_ == std::nullopt){
             if (timeout.count() != 0){
-                if (std::chrono::steady_clock::now() > timepoint){
-                    throw TimeOut();
-                }
-                if(empty_.wait_until(lock, timepoint) == std::cv_status::timeout){
-                    throw TimeOut();
-                }
-            } else {
-                empty_.wait(lock);
-            }
+                if(empty_.wait_until(lock, timepoint) == std::cv_status::timeout) throw TimeOut();
+            } else empty_.wait(lock);
         }
         const T value = data_.value(); // попробовать убрать конст
         data_ = std::nullopt;
