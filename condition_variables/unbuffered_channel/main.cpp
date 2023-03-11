@@ -6,6 +6,7 @@
 #include <iostream>
 #include <unordered_map>
 #include <sstream>
+#include <queue>
 
 using namespace std::chrono_literals;
 
@@ -49,8 +50,7 @@ void SecondProcessorThread(UnbufferedChannel<std::string>& processedValuesChanne
     }
 }
 
-int main() {
-    assert(std::thread::hardware_concurrency() > 1);
+void TestPipeline() {
     const size_t threadsCount = std::min(std::max(std::thread::hardware_concurrency() + 1, 4U), 8U);
     std::cout << "Max concurrent threads: " << std::thread::hardware_concurrency() << std::endl;
     std::cout << "Threads to be created: " << threadsCount << std::endl;
@@ -91,6 +91,73 @@ int main() {
     for (const auto& [threadId, processedItems] : processedItemsCount) {
         assert(processedItems < 0.6 * totalProcessedItems);
     }
+}
+
+void TestManyPuts() {
+    using namespace std::chrono_literals;
+
+    UnbufferedChannel<int> chan;
+    std::mutex mutex;
+    std::queue<int> putNumbers;
+
+    std::vector<std::thread> threads;
+    threads.emplace_back([&](){
+        chan.Put(1);
+        {
+            std::lock_guard<std::mutex> lock(mutex);
+            putNumbers.push(1);
+        }
+        chan.Put(2);
+        {
+            std::lock_guard<std::mutex> lock(mutex);
+            putNumbers.push(2);
+        }
+    });
+
+    std::this_thread::sleep_for(10ms);
+    assert(putNumbers.empty());
+
+    threads.emplace_back([&](){
+        chan.Put(3);
+        {
+            std::lock_guard<std::mutex> lock(mutex);
+            putNumbers.push(3);
+        }
+        chan.Put(4);
+        {
+            std::lock_guard<std::mutex> lock(mutex);
+            putNumbers.push(4);
+        }
+    });
+
+    {
+        assert(chan.Get() == 1);
+        std::this_thread::sleep_for(10ms);
+        std::lock_guard<std::mutex> lock(mutex);
+        assert(putNumbers.size() == 1);
+        assert(putNumbers.front() == 1);
+        putNumbers.pop();
+    }
+
+    for (int i = 0; i < 3; ++i) {
+        int nextValueGot = chan.Get();
+        std::this_thread::sleep_for(10ms);
+        std::lock_guard<std::mutex> lock(mutex);
+        assert(putNumbers.size() == 1);
+        assert(putNumbers.front() == nextValueGot);
+        putNumbers.pop();
+    }
+
+    for (auto& thread : threads) {
+        thread.join();
+    }
+}
+
+int main() {
+    assert(std::thread::hardware_concurrency() > 1);
+
+    TestPipeline();
+    TestManyPuts();
 
     return 0;
 }
