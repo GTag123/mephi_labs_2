@@ -30,6 +30,7 @@ constexpr bool shared_mutex_is_defined = is_defined<std::shared_mutex>;
 #include <queue>
 #include <random>
 #include <shared_mutex>
+#include <algorithm>
 
 using namespace std::chrono_literals;
 
