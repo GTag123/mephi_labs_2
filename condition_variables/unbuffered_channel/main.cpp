@@ -116,7 +116,9 @@ void TestManyPuts() {
     });
 
     std::this_thread::sleep_for(10ms);
+    std::cout << "assert" << std::endl;
     assert(putNumbers.empty());
+    std::cout << "assert2" << std::endl;
 
     threads.emplace_back([&](){
         chan.Put(3);
