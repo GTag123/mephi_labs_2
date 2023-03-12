@@ -1,10 +1,16 @@
 #define _LIBCPP_MUTEX
 #define _LIBCPP_SHARED_MUTEX
 #define _LIBCPP___MUTEX_BASE
+#define _GLIBCXX_MUTEX
+#define _GLIBCXX_SHARED_MUTEX
+#define _GLIBCXX___MUTEX_BASE
 #include "task.h"
 #undef _LIBCPP___MUTEX_BASE
 #undef _LIBCPP_MUTEX
 #undef _LIBCPP_SHARED_MUTEX
+#undef _GLIBCXX_MUTEX
+#undef _GLIBCXX_SHARED_MUTEX
+#undef _GLIBCXX___MUTEX_BASE
 
 #include <typeinfo>
 
