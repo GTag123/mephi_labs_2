@@ -56,6 +56,7 @@ void TestSimple() {
 }
 
 void TestTerminationWithoutWait() {
+    std::cout << "TestWithoutWait" << std::endl;
     ThreadPool pool(10);
 
     std::mutex mutex;
@@ -151,6 +152,5 @@ int main() {
     TestTerminationWithoutWait();
     TestConcurrentSelfTaskPush();
     TestConcurrentTaskPush();
-
     return 0;
 }
