@@ -12,8 +12,8 @@
 #undef _GLIBCXX_SHARED_MUTEX
 #undef _GLIBCXX___MUTEX_BASE
 
+#if defined(__clang__)
 #include <typeinfo>
-
 template<typename T, typename = void>
 constexpr bool is_defined = false;
 
@@ -27,6 +27,11 @@ namespace std {
 
 constexpr bool mutex_is_defined = is_defined<std::mutex>;
 constexpr bool shared_mutex_is_defined = is_defined<std::shared_mutex>;
+
+#elif defined(__GNUC__) || defined(__GNUG__)
+constexpr bool mutex_is_defined = false;
+constexpr bool shared_mutex_is_defined = false;
+#endif
 
 #include <cassert>
 #include <vector>
