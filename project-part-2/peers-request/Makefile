@@ -5,7 +5,7 @@ compile:
 	cd cmake-build && make
 
 run: compile
-	./cmake-build/torrent-file
+	./cmake-build/peers-request
 
 clean:
 	rm -rf cmake-build
