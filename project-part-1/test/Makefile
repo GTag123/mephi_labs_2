@@ -1,11 +1,28 @@
-all: compile run
+SOURCES := $(wildcard *.cpp)
+RESULT := main
+SCRIPTS := $(wildcard *.sh)
+SCRIPT_TARGETS := $(SCRIPTS:.sh=_run)
 
-compile:
-	cmake -S . -B cmake-build
-	cd cmake-build && make
+OBJECTS := $(SOURCES:.cpp=.o)
+CFLAGS := -g -fsanitize=thread -std=c++2a -Wall -Werror
+LDFLAGS := -fsanitize=thread
+
+all: run
 
 run: compile
-	./cmake-build/torrent-file
+	./$(RESULT)
+
+%_run: %.sh
+	/bin/bash $<
+
+compile: $(SOURCES) $(RESULT) $(SCRIPT_TARGETS)
+
+.cpp.o: $(wildcard *.h)
+	g++ -c $(CFLAGS) $< -o $@
+
+$(RESULT): $(OBJECTS)
+	g++ $(OBJECTS) $(LDFLAGS) -o $(RESULT)
 
 clean:
-	rm -rf cmake-build
+	rm -f $(OBJECTS) $(RESULT)
+
