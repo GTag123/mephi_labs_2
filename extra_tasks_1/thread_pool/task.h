@@ -25,7 +25,6 @@
  *  сразу создаются конструктором.
  * Задачей может являться любой callable-объект, обернутый в std::function<void()>.
  */
-
 class ThreadPool {
     size_t size;
     std::vector<std::thread> threads;
