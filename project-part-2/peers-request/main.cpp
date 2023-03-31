@@ -25,6 +25,7 @@ void RequestPeers(const TorrentFile& tf) {
 }
 
 void TestTorrentFile(const fs::path& file) {
+    std::cout << 13232 << std::endl;
     TorrentFile tf = LoadTorrentFile(file);
     std::cout << "Loaded torrent file. " << tf.comment << std::endl;
 
