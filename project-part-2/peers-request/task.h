@@ -11,13 +11,15 @@
 #include <map>
 #include <sstream>
 #include <cpr/cpr.h>
+#include "TorrentFileParser.h"
 
 class TorrentTracker {
 public:
     /*
      * url - адрес трекера, берется из поля announce в .torrent-файле
      */
-    TorrentTracker(const std::string& url);
+    explicit TorrentTracker(const std::string& url): url_(url) {
+    };
 
     /*
      * Получить список пиров у трекера и сохранить его для дальнейшей работы.
@@ -43,5 +45,18 @@ private:
 };
 
 TorrentFile LoadTorrentFile(const std::string& filename) {
-    // Перенесите сюда функцию загрузки файла из предыдущего домашнего задания
+    std::ifstream file(filename, std::ios::binary);
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    std::string contents = buffer.str();
+    file.close();
+
+    TorrentFile torrent;
+    unsigned char infohash[20];
+    if (parse_info_dict(contents, infohash, torrent.announce, torrent.comment, torrent.pieceHashes, torrent.pieceLength, torrent.length)) {
+        torrent.infoHash = std::string((char *) infohash, 20);
+        return torrent;
+    } else {
+        throw std::runtime_error("Invalid torrent file");
+    }
 }

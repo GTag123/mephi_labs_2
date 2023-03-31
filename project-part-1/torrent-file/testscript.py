@@ -1,18 +1,19 @@
-R, C = map(int, input().split())
-board = [list(input()) for _ in range(R)]
+def max_ideal_sculptures(a, X, T):
+    cnt = 0
+    for i in range(len(a)):
+        if abs(a[i] - X) <= 1:  # текущая скульптура близка к идеальной
+            cnt += 1
+        elif a[i] < X:  # попытаемся увеличить вес скульптуры на 1 килограмм
+            if T >= 1:
+                cnt += 1
+                T -= 1
+        else:  # попытаемся уменьшить вес скульптуры на 1 килограмм
+            if T >= 2:
+                cnt += 1
+                T -= 2
+    return cnt
+a = [2, 3, 4, 7, 10]
+X = 7
+T = 3
+print(max_ideal_sculptures(a, X, T))  # выведет 3
 
-bombs = [[0] * C for _ in range(R)]
-for i in range(R):
-    for j in range(C):
-        if board[i][j].isdigit():
-            bombs[i][j] = int(board[i][j])
-
-for i in range(R):
-    for j in range(C):
-        if bombs[i][j] > 0: # . in Manhattan distance
-            for k in range(R):
-                for l in range(C):
-                    if abs(k-i) + abs(l-j) <= bombs[i][j]:
-                        board[k][l] = '.'
-for row in board:
-    print(''.join(row))
