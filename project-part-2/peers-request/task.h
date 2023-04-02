@@ -64,7 +64,7 @@ public:
     /*
      * Отдает полученный ранее список пиров
      */
-    const std::vector<Peer> &GetPeers() const{
+    const std::vector<Peer> &GetPeers() const {
         return peers_;
     };
 
