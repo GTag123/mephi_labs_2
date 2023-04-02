@@ -12,7 +12,7 @@ std::string hashing(const BencodeDictionary& dict){
     if (dict.dict_val.find("info") == dict.dict_val.end()) {
         throw std::runtime_error("Invalid bencode: no info dictionary");
     }
-    string toHashing = dict.encode();
+    string toHashing = dict.get("info")->encode();
     unsigned char hash[20];
     sha1(toHashing.c_str(), toHashing.length(), hash);
     std::string result;
