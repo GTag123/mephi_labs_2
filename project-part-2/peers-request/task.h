@@ -1,18 +1,13 @@
 #pragma once
 
+#include "iostream"
 #include "peer.h"
 #include "torrent_file.h"
 #include <string>
 #include <vector>
 #include <openssl/sha.h>
-#include <fstream>
-#include <variant>
-#include <list>
-#include <map>
-#include <sstream>
 #include <cpr/cpr.h>
-#include "iostream"
-#include "BencodeHash.h"
+#include "getInfoHash.h"
 #include "responsePeersParser.h"
 
 class TorrentTracker {
@@ -59,7 +54,7 @@ public:
         }
 
         size_t pivot = 0;
-        shared_ptr<BencodeDictionary> dict = dynamic_pointer_cast<BencodeDictionary>(parse_bencode(res.text.c_str(), res.text.size(), pivot));
+        std::shared_ptr<BencodeDictionary> dict = std::dynamic_pointer_cast<BencodeDictionary>(parse_bencode(res.text.c_str(), res.text.size(), pivot));
         std::string peers = dynamic_pointer_cast<BencodeString>(dict->get("peers"))->get_str();
         std::vector<Peer> parsedPeers = parsePeers(peers);
         peers_ = std::move(parsedPeers);
@@ -86,12 +81,12 @@ TorrentFile LoadTorrentFile(const std::string& filename){
 
     TorrentFile torrent;
     size_t pivot = 0;
-    shared_ptr<BencodeDictionary> dict = dynamic_pointer_cast<BencodeDictionary>(parse_bencode(contents.c_str(), contents.size(), pivot));
+    std::shared_ptr<BencodeDictionary> dict = dynamic_pointer_cast<BencodeDictionary>(parse_bencode(contents.c_str(), contents.size(), pivot));
     torrent.announce = dynamic_pointer_cast<BencodeString>(dict->get("announce"))->get_str();
     torrent.comment = dynamic_pointer_cast<BencodeString>(dict->get("comment"))->get_str();
     torrent.pieceLength = dynamic_pointer_cast<BencodeInteger>(dynamic_pointer_cast<BencodeDictionary>(dict->get("info"))->get("piece length"))->get_int();
     torrent.length = dynamic_pointer_cast<BencodeInteger>(dynamic_pointer_cast<BencodeDictionary>(dict->get("info"))->get("length"))->get_int();
-    string piecesHash = dynamic_pointer_cast<BencodeString>(dynamic_pointer_cast<BencodeDictionary>(dict->get("info"))->get("pieces"))->get_str();
+    std::string piecesHash = dynamic_pointer_cast<BencodeString>(dynamic_pointer_cast<BencodeDictionary>(dict->get("info"))->get("pieces"))->get_str();
     for (int i = 0; i < piecesHash.length(); i += 20) {
         torrent.pieceHashes.push_back(piecesHash.substr(i, 20));
     }
