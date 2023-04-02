@@ -55,7 +55,7 @@ public:
 
         size_t pivot = 0;
         std::shared_ptr<BencodeDictionary> dict = std::dynamic_pointer_cast<BencodeDictionary>(parse_bencode(res.text.c_str(), res.text.size(), pivot));
-        std::string peers = dynamic_pointer_cast<BencodeString>(dict->get("peers"))->get_str();
+        std::string peers = std::dynamic_pointer_cast<BencodeString>(dict->get("peers"))->get_str();
         std::vector<Peer> parsedPeers = parsePeers(peers);
         peers_ = std::move(parsedPeers);
     };
