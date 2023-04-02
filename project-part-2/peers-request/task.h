@@ -81,12 +81,12 @@ TorrentFile LoadTorrentFile(const std::string& filename){
 
     TorrentFile torrent;
     size_t pivot = 0;
-    std::shared_ptr<BencodeDictionary> dict = dynamic_pointer_cast<BencodeDictionary>(parse_bencode(contents.c_str(), contents.size(), pivot));
-    torrent.announce = dynamic_pointer_cast<BencodeString>(dict->get("announce"))->get_str();
-    torrent.comment = dynamic_pointer_cast<BencodeString>(dict->get("comment"))->get_str();
-    torrent.pieceLength = dynamic_pointer_cast<BencodeInteger>(dynamic_pointer_cast<BencodeDictionary>(dict->get("info"))->get("piece length"))->get_int();
-    torrent.length = dynamic_pointer_cast<BencodeInteger>(dynamic_pointer_cast<BencodeDictionary>(dict->get("info"))->get("length"))->get_int();
-    std::string piecesHash = dynamic_pointer_cast<BencodeString>(dynamic_pointer_cast<BencodeDictionary>(dict->get("info"))->get("pieces"))->get_str();
+    std::shared_ptr<BencodeDictionary> dict = std::dynamic_pointer_cast<BencodeDictionary>(parse_bencode(contents.c_str(), contents.size(), pivot));
+    torrent.announce = std::dynamic_pointer_cast<BencodeString>(dict->get("announce"))->get_str();
+    torrent.comment = std::dynamic_pointer_cast<BencodeString>(dict->get("comment"))->get_str();
+    torrent.pieceLength = std::dynamic_pointer_cast<BencodeInteger>(std::dynamic_pointer_cast<BencodeDictionary>(dict->get("info"))->get("piece length"))->get_int();
+    torrent.length = std::dynamic_pointer_cast<BencodeInteger>(std::dynamic_pointer_cast<BencodeDictionary>(dict->get("info"))->get("length"))->get_int();
+    std::string piecesHash = std::dynamic_pointer_cast<BencodeString>(std::dynamic_pointer_cast<BencodeDictionary>(dict->get("info"))->get("pieces"))->get_str();
     for (int i = 0; i < piecesHash.length(); i += 20) {
         torrent.pieceHashes.push_back(piecesHash.substr(i, 20));
     }
