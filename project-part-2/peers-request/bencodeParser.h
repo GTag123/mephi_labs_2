@@ -105,7 +105,7 @@ std::shared_ptr<BencodeCommon> parse_bencode(const char *buffer, size_t length, 
             // List
             result = std::make_shared<BencodeList>();
             while (buffer[pos] != 'e') {
-                dynamic_pointer_cast<BencodeList>(result)->list_val.push_back(parse_bencode(buffer, length, pos));
+                std::dynamic_pointer_cast<BencodeList>(result)->list_val.push_back(parse_bencode(buffer, length, pos));
             }
             pos++;
             break;
@@ -114,8 +114,8 @@ std::shared_ptr<BencodeCommon> parse_bencode(const char *buffer, size_t length, 
             // Dictionary
             result = std::make_shared<BencodeDictionary>();
             while (buffer[pos] != 'e') {
-                std::string key = dynamic_pointer_cast<BencodeString>(parse_bencode(buffer, length, pos))->str_val;
-                dynamic_pointer_cast<BencodeDictionary>(result)->dict_val[key] = parse_bencode(buffer, length, pos);
+                std::string key = std::dynamic_pointer_cast<BencodeString>(parse_bencode(buffer, length, pos))->str_val;
+                std::dynamic_pointer_cast<BencodeDictionary>(result)->dict_val[key] = parse_bencode(buffer, length, pos);
             }
             pos++;
             break;
@@ -135,7 +135,7 @@ std::shared_ptr<BencodeCommon> parse_bencode(const char *buffer, size_t length, 
             std::string length_str(buffer + pos - 1, end_pos - pos + 1);
             size_t str_length = stoll(length_str);
             pos = end_pos + 1;
-            result = make_shared<BencodeString>(std::string(buffer + pos, str_length));
+            result = std::make_shared<BencodeString>(std::string(buffer + pos, str_length));
             pos += str_length;
             break;
         }
