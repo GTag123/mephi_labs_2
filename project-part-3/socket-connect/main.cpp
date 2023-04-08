@@ -3,12 +3,18 @@
 #include <cassert>
 #include <iostream>
 #include <filesystem>
-#include <ctime>
+#include <random>
 
 namespace fs = std::filesystem;
 
-std::string RandomString(size_t size) {
-    return std::to_string(time(nullptr) % 10000);
+std::string RandomString(size_t length) {
+    std::random_device random;
+    std::string result;
+    result.reserve(length);
+    for (size_t i = 0; i < length; ++i) {
+        result.push_back(random() % ('Z' - 'A') + 'A');
+    }
+    return result;
 }
 
 const std::string PeerId = "TESTAPPDONTWORRY" + RandomString(4);
