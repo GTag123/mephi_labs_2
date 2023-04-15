@@ -58,6 +58,7 @@ public:
             throw std::runtime_error("Failed to set socket timeout");
         }
         tv.tv_sec = readTimeout_.count() / 1000;
+        tv.tv_usec = (readTimeout_.count() % 1000) * 1000;
         if (setsockopt(sockfd_, SOL_SOCKET, SO_SNDTIMEO, (const char*)&tv, sizeof(tv)) < 0) {
             throw std::runtime_error("Failed to set socket timeout");
         }
@@ -129,7 +130,7 @@ public:
             if (n < 4) {
                 throw std::runtime_error("Invalid message length");
             }
-            len = (lenbuf[0] << 24) | (lenbuf[1] << 16) | (lenbuf[2] << 8) | lenbuf[3];
+            len = BytesToInt(lenbuf);
         }
 
         // read message
