@@ -76,7 +76,7 @@ public:
         // Wait for connection to be established, or for timeout to occur
         pfd.fd = sockfd_;
         pfd.events = POLLOUT;
-        ret = poll(&pfd, 1, sockfd_);
+        ret = poll(&pfd, 1, connectTimeout_.count());
         if (ret == 0) {
             // Timeout occurred
             throw std::runtime_error("Connection timed out");
