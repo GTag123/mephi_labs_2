@@ -25,7 +25,7 @@ public:
     TcpConnect(std::string ip, int port, std::chrono::milliseconds connectTimeout, std::chrono::milliseconds readTimeout) :
             ip_(std::move(ip)), port_(port), connectTimeout_(connectTimeout), readTimeout_(readTimeout) {}
     ~TcpConnect() {
-        if (status == 2){
+        if (status != 2){
             CloseConnection();
         }
     };
@@ -53,7 +53,7 @@ public:
         // set socket timeouts
         struct timeval tv;
         tv.tv_sec = connectTimeout_.count() / 1000;
-        tv.tv_usec = 0;
+        tv.tv_usec = (connectTimeout_.count() % 1000) * 1000;
         if (setsockopt(sockfd_, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof(tv)) < 0) {
             throw std::runtime_error("Failed to set socket timeout");
         }
@@ -115,7 +115,7 @@ public:
             char lenbuf[4];
             struct timeval tv;
             tv.tv_sec = readTimeout_.count() / 1000;
-            tv.tv_usec = 0;
+            tv.tv_usec = (readTimeout_.count() % 1000) * 1000;
             if (setsockopt(sockfd_, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof(tv)) < 0) {
                 throw std::runtime_error("Failed to set socket timeout");
             }
@@ -138,7 +138,7 @@ public:
         while (len > 0) {
             struct timeval tv;
             tv.tv_sec = readTimeout_.count() / 1000;
-            tv.tv_usec = 0;
+            tv.tv_usec = (readTimeout_.count() % 1000) * 1000;
             if (setsockopt(sockfd_, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof(tv)) < 0) {
                 throw std::runtime_error("Failed to set socket timeout");
             }
