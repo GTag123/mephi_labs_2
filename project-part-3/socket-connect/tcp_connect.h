@@ -53,7 +53,6 @@ public:
         address.sin_family = AF_INET;
         address.sin_addr.s_addr = inet_addr(ip_.c_str());
         address.sin_port = htons(port_);
-
         // Create the socket
         sockfd_ = socket(AF_INET, SOCK_STREAM, 0);
         if (sockfd_ < 0) {
