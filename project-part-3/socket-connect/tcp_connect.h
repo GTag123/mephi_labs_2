@@ -44,37 +44,50 @@ public:
      * - https://man7.org/linux/man-pages/man3/strerror.3.html
      */
     void EstablishConnection(){
-        // create socket
+        struct pollfd pfd;
+        int ret;
+
+        // Set up the socket address and port
+        struct sockaddr_in address;
+        memset(&address, 0, sizeof(address));
+        address.sin_family = AF_INET;
+        address.sin_addr.s_addr = inet_addr(ip_.c_str());
+        address.sin_port = htons(port_);
+
+        // Create the socket
         sockfd_ = socket(AF_INET, SOCK_STREAM, 0);
         if (sockfd_ < 0) {
             throw std::runtime_error("Failed to create socket");
         }
 
-        // set socket timeouts
-        struct timeval tv;
-        tv.tv_sec = connectTimeout_.count() / 1000;
-        tv.tv_usec = (connectTimeout_.count() % 1000) * 1000;
-        if (setsockopt(sockfd_, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof(tv)) < 0) {
-            throw std::runtime_error("Failed to set socket timeout");
-        }
-        tv.tv_sec = readTimeout_.count() / 1000;
-        tv.tv_usec = (readTimeout_.count() % 1000) * 1000;
-        if (setsockopt(sockfd_, SOL_SOCKET, SO_SNDTIMEO, (const char*)&tv, sizeof(tv)) < 0) {
-            throw std::runtime_error("Failed to set socket timeout");
+        // Set socket to non-blocking mode
+        int flags = fcntl(sockfd_, F_GETFL, 0);
+        fcntl(sockfd_, F_SETFL, flags | O_NONBLOCK);
+
+        // Connect to the remote host
+        ret = connect(sockfd_, (struct sockaddr*)&address, sizeof(address));
+        if (ret == 0) {
+            // Connection established immediately
+            flags = fcntl(sockfd_, F_GETFL, 0);
+            fcntl(sockfd_, F_SETFL, flags & ~O_NONBLOCK);
+            return;
         }
 
-        // set socket address
-        struct sockaddr_in serv_addr;
-        memset(&serv_addr, 0, sizeof(serv_addr));
-        serv_addr.sin_family = AF_INET;
-        serv_addr.sin_port = htons(port_);
-        if (inet_pton(AF_INET, ip_.c_str(), &serv_addr.sin_addr) <= 0) {
-            throw std::runtime_error("Invalid host address");
-        }
-
-        // connect to server
-        if (connect(sockfd_, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
-            throw std::runtime_error("Failed to connect to server");
+        // Wait for connection to be established, or for timeout to occur
+        pfd.fd = sockfd_;
+        pfd.events = POLLOUT;
+        ret = poll(&pfd, 1, sockfd_);
+        if (ret == 0) {
+            // Timeout occurred
+            throw std::runtime_error("Connection timed out");
+        } else if (ret < 0) {
+            // Error occurred
+            throw std::runtime_error("Error while connecting to remote host");
+        } else {
+            // Connection established
+            flags = fcntl(sockfd_, F_GETFL, 0);
+            fcntl(sockfd_, F_SETFL, flags & ~O_NONBLOCK);
+            return;
         }
     };
 
