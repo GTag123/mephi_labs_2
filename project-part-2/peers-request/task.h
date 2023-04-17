@@ -59,7 +59,6 @@ public:
         std::string peers = std::dynamic_pointer_cast<BencodeString>(dict->get("peers"))->get_str();
         std::vector<Peer> parsedPeers = parsePeers(peers);
         peers_ = std::move(parsedPeers);
-//        get_peers(peers_, std::dynamic_pointer_cast<BencodeString>(dict->get("peers"))->get_str());
     };
 
     /*
