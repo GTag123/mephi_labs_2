@@ -33,12 +33,12 @@ struct BencodeInteger : public BencodeCommon{
 };
 
 struct BencodeString : public BencodeCommon{
-    std::basic_string<unsigned char> str_val;
-    BencodeString(std::basic_string<unsigned char> str_val) : str_val(std::move(str_val)) {}
+    std::string str_val;
+    BencodeString(std::string str_val) : str_val(std::move(str_val)) {}
     std::string encode() const override {
         return std::to_string(str_val.length()) + ":" + str_val;
     }
-    std::basic_string<unsigned char> get_str() const {
+    std::string get_str() const {
         return str_val;
     }
 };
