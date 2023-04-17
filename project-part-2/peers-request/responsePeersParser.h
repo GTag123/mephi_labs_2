@@ -12,7 +12,8 @@ std::vector<Peer> parsePeers(const std::string& peersHash){
                 ip_string += ".";
             }
         }
-        auto port = (static_cast<uint16_t>((peersHash[i+4])) << 8) + static_cast<uint16_t>(peersHash[i+5]);
+        auto port = (uint16_t(static_cast<unsigned char>(peersHash[i + 4])) << 8)
+                + uint16_t(static_cast<unsigned char>(peersHash[i + 5]));
         std::unordered_map<std::string, std::string> peerMap;
         parsedPeers.push_back({ip_string, port});
     }
