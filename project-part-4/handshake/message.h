@@ -9,16 +9,16 @@
  */
 enum class MessageId : uint8_t {
     Choke = 0,
-    Unchoke = 1,
-    Interested = 2,
-    NotInterested = 3,
-    Have = 4,
-    BitField = 5,
-    Request = 6,
-    Piece = 7,
-    Cancel = 8,
-    Port = 9,
-    KeepAlive = (uint8_t)-1,
+    Unchoke,
+    Interested,
+    NotInterested,
+    Have,
+    BitField,
+    Request,
+    Piece,
+    Cancel,
+    Port,
+    KeepAlive,
 };
 
 struct Message {
