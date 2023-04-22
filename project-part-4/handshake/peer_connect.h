@@ -3,6 +3,7 @@
 #include "tcp_connect.h"
 #include "peer.h"
 #include "torrent_file.h"
+#include "byte_tools.h"
 
 /*
  * Структура, хранящая информацию о доступности частей скачиваемого файла у данного пира
