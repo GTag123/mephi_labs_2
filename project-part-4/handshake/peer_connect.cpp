@@ -79,7 +79,7 @@ bool PeerConnect::EstablishConnection() {
      * Также надо учесть, что сообщение тип Bitfield является опциональным, то есть пиры необязательно будут слать его.
      * Вместо этого они могут сразу прислать сообщение Unchoke, поэтому надо быть готовым обработать его в этой функции.
      * Обработка сообщения Unchoke заключается в выставлении флага `choked_` в значение `false`
-     */
+*/
 void PeerConnect::ReceiveBitfield() {
     std::string response = this->socket_.ReceiveData(5);
     size_t length = BytesToInt(response.substr(0, 4));
