@@ -50,7 +50,7 @@ void TestTorrentFile(const fs::path& file) {
 }
 
 int main() {
-    for (const auto& entry : fs::directory_iterator("resources")) {
+    for (const auto& entry : fs::directory_iterator("../resources")) {
         TestTorrentFile(entry.path());
     }
     return 0;

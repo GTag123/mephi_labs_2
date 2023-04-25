@@ -87,9 +87,9 @@ std::string TcpConnect::ReceiveData(size_t bufferSize) const {
         if (n < 0) {
             throw std::runtime_error("Failed to receive data");
         }
-        if (n == 0) {
-            return "";
-        }
+//        if (n == 0) {
+//            return "";
+//        }
         if (n < 4) {
             throw std::runtime_error("Invalid message length");
         }
@@ -108,9 +108,9 @@ std::string TcpConnect::ReceiveData(size_t bufferSize) const {
         if (n < 0) {
             throw std::runtime_error("Failed to receive data");
         }
-        if (n == 0) {
-            return "";
-        }
+//        if (n == 0) {
+//            return "";
+//        }
         buf += n;
         len -= n;
     }
