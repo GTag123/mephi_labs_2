@@ -56,11 +56,11 @@ void PeerConnect::PerformHandshake() {
             CalculateSHA1(this->selfPeerId_);
     handshake = ((char) 19) + handshake;
     this->socket_.SendData(handshake);
-    std::cout << handshake << std::endl;
+//    std::cout << handshake << std::endl;
     std::string response = this->socket_.ReceiveData(68); // ждёт 68 чаров или нихуя?
-    std::cout << "123dwefswfsdfsf" << std::endl;
+//    std::cout << "123dwefswfsdfsf" << std::endl;
     if (response[0] != '\x13' || response.substr(1, 19) != "BitTorrent protocol") {
-        std::cout << response << std::endl;
+//        std::cout << response << std::endl;
         throw std::runtime_error("Handshake failed");
     }
 }
