@@ -100,10 +100,10 @@ std::string TcpConnect::ReceiveData(size_t bufferSize) const {
     std::string data(len, 0);
     char *buf = &data[0];
 
+    struct pollfd pfd;
+    pfd.fd = sockfd_;
+    pfd.events = POLLIN;
     while (len > 0) {
-        struct pollfd pfd;
-        pfd.fd = sockfd_;
-        pfd.events = POLLIN;
         int ret = poll(&pfd, 1, readTimeout_.count());
         if (ret == 0) {
             throw std::runtime_error("Connection timed out");
@@ -111,7 +111,7 @@ std::string TcpConnect::ReceiveData(size_t bufferSize) const {
             throw std::runtime_error("Error while connecting to remote host");
         } else {
             int n = recv(sockfd_, buf, len, 0);
-            if (n == 0){
+            if (n == 0) {
                 return "";
             }
             if (n < 0) {
