@@ -72,37 +72,38 @@ void TcpConnect::SendData(const std::string &data) const {
 
 
 std::string TcpConnect::ReceiveData(size_t bufferSize) const {
-    int len;
+    struct pollfd pfd;
+    pfd.fd = sockfd_;
+    pfd.events = POLLIN;
+
+    int len = 4;
     if (bufferSize > 0) {
         len = bufferSize;
     }
     else {
-        char lenbuf[4];
-        struct timeval tv;
-        tv.tv_sec = readTimeout_.count() / 1000;
-        tv.tv_usec = (readTimeout_.count() % 1000) * 1000;
-        if (setsockopt(sockfd_, SOL_SOCKET, SO_RCVTIMEO, (const char *) &tv, sizeof(tv)) < 0) {
-            throw std::runtime_error("Failed to set socket timeout");
-        }
-
-        int n = recv(sockfd_, lenbuf, 4, 0);
-        if (n < 0) {
-            throw std::runtime_error("Failed to receive data");
-        }
-//        if (n == 0) {
-//            return "";
-//        }
-        if (n < 4) {
-            throw std::runtime_error("Invalid message length");
+        std::string lenbuf(4, 0);
+        char* lenbufptr = &lenbuf[0];
+        while (len > 0){
+            int ret = poll(&pfd, 1, readTimeout_.count());
+            if (ret == 0) {
+                throw std::runtime_error("Connection timed out");
+            } else if (ret < 0) {
+                throw std::runtime_error("Error while connecting to remote host");
+            } else {
+                int n = recv(sockfd_, lenbufptr, len, 0);
+                if (n < 0) {
+                    throw std::runtime_error("Failed to receive data");
+                }
+                lenbufptr += n;
+                len -= n;
+            }
         }
         len = BytesToInt(lenbuf);
     }
     std::string data(len, 0);
     char *buf = &data[0];
 
-    struct pollfd pfd;
-    pfd.fd = sockfd_;
-    pfd.events = POLLIN;
+
     while (len > 0) {
         int ret = poll(&pfd, 1, readTimeout_.count());
         if (ret == 0) {
@@ -112,7 +113,7 @@ std::string TcpConnect::ReceiveData(size_t bufferSize) const {
         } else {
             int n = recv(sockfd_, buf, len, 0);
             if (n == 0) {
-                return "";
+                throw std::runtime_error("Connection closed");
             }
             if (n < 0) {
                 throw std::runtime_error("Failed to receive data");

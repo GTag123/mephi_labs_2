@@ -42,7 +42,7 @@ struct Message {
      * Создаем сообщение с заданным типом и содержимым. Длина вычисляется автоматически
      */
     static Message Init(MessageId id, const std::string& payload) {
-        return {id, payload.size(), payload};
+        return {id, payload.size() + 1, payload};
     };
 
     /*
