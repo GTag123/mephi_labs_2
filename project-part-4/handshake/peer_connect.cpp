@@ -52,15 +52,18 @@ void PeerConnect::Run() {
      */
 void PeerConnect::PerformHandshake() {
     this->socket_.EstablishConnection();
+
     std::string handshake = "BitTorrent protocol00000000" + this->tf_.infoHash +
-            this->selfPeerId_;
+                            this->selfPeerId_;
     handshake = ((char) 19) + handshake;
+
     this->socket_.SendData(handshake);
+
     std::string response = this->socket_.ReceiveData(68);
     if (response[0] != '\x13' || response.substr(1, 19) != "BitTorrent protocol") {
         throw std::runtime_error("Handshake failed");
     }
-    if (response.substr(28, 20) != this->tf_.infoHash){
+    if (response.substr(28, 20) != this->tf_.infoHash) {
         throw std::runtime_error("Peer infohash another");
     }
 
@@ -91,7 +94,9 @@ void PeerConnect::ReceiveBitfield() {
     if ((int) response[0] == 20) {
         response = this->socket_.ReceiveData();
     }
-    MessageId id = static_cast<MessageId>(response[0]);
+
+    MessageId id = static_cast<MessageId>((int) response[0]);
+
     if (id == MessageId::BitField) {
         std::string bitfield = response.substr(1, response.length() - 1);
         this->piecesAvailability_ = PeerPiecesAvailability(bitfield);

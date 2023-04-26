@@ -76,7 +76,7 @@ std::string TcpConnect::ReceiveData(size_t bufferSize) const {
     pfd.fd = sockfd_;
     pfd.events = POLLIN;
 
-    int len = 4;
+    size_t len = 4;
     if (bufferSize > 0) {
         len = bufferSize;
     }

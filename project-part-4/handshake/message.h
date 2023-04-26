@@ -31,19 +31,12 @@ struct Message {
      * Выделяем тип сообщения и длину и создаем объект типа Message.
      * Подразумевается, что здесь в качестве `messageString` будет приниматься строка, прочитанная из TCP-сокета
      */
-    static Message Parse(const std::string& messageString) {
-        MessageId id = static_cast<MessageId>(messageString[0]);
-        size_t messageLength = messageString.size(); // with id
-        std::string payload = messageString.substr(1, messageLength - 1);
-        return {id, messageLength, payload};
-    };
+    static Message Parse(const std::string& messageString);
 
     /*
      * Создаем сообщение с заданным типом и содержимым. Длина вычисляется автоматически
      */
-    static Message Init(MessageId id, const std::string& payload) {
-        return {id, payload.size() + 1, payload};
-    };
+    static Message Init(MessageId id, const std::string& payload);
 
     /*
      * Формируем строку с сообщением, которую можно будет послать пиру в соответствии с протоколом.
@@ -51,7 +44,5 @@ struct Message {
      * Секция с длиной сообщения занимает 4 байта и представляет собой целое число в формате big-endian
      * id сообщения занимает 1 байт и может принимать значения от 0 до 9 включительно
      */
-    std::string ToString() const{
-        return IntToBytes(messageLength) + static_cast<char>(id) + payload;
-    };
+    std::string ToString() const;
 };
