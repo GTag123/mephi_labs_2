@@ -79,11 +79,10 @@ std::string TcpConnect::ReceiveData(size_t bufferSize) const {
     size_t len = 4;
     if (bufferSize > 0) {
         len = bufferSize;
-    }
-    else {
+    } else {
         std::string lenbuf(4, 0);
-        char* lenbufptr = &lenbuf[0];
-        while (len > 0){
+        char *lenbufptr = &lenbuf[0];
+        while (len > 0) {
             int ret = poll(&pfd, 1, readTimeout_.count());
             if (ret == 0) {
                 throw std::runtime_error("Connection timed out");

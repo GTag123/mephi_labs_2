@@ -43,13 +43,6 @@ void PeerConnect::Run() {
     }
 }
 
-/*
-     * Функция производит handshake.
-     * - Подключиться к пиру по протоколу TCP
-     * - Отправить пиру сообщение handshake
-     * - Проверить правильность ответа пира
-     * https://wiki.theory.org/BitTorrentSpecification#Handshake
-     */
 void PeerConnect::PerformHandshake() {
     this->socket_.EstablishConnection();
 
@@ -82,13 +75,6 @@ bool PeerConnect::EstablishConnection() {
     }
 }
 
-/*
-     * Функция читает из сокета bitfield с информацией о наличии у пира различных частей файла.
-     * Полученную информацию надо сохранить в поле `piecesAvailability_`.
-     * Также надо учесть, что сообщение тип Bitfield является опциональным, то есть пиры необязательно будут слать его.
-     * Вместо этого они могут сразу прислать сообщение Unchoke, поэтому надо быть готовым обработать его в этой функции.
-     * Обработка сообщения Unchoke заключается в выставлении флага `choked_` в значение `false`
-*/
 void PeerConnect::ReceiveBitfield() {
     std::string response = this->socket_.ReceiveData();
     if ((int) response[0] == 20) {
