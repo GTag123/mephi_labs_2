@@ -1,7 +1,7 @@
 #include "byte_tools.h"
 #include <openssl/sha.h>
 
-int BytesToInt(std::string_view bytes) {
+size_t BytesToInt(std::string_view bytes) {
     int result = 0;
 
     for (const char& byte : bytes) {
@@ -11,7 +11,7 @@ int BytesToInt(std::string_view bytes) {
     return result;
 }
 
-std::string IntToBytes(int value) {
+std::string IntToBytes(size_t value) {
     std::string result;
     result.resize(4);
 

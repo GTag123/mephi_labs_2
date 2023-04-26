@@ -32,9 +32,9 @@ struct Message {
      * Подразумевается, что здесь в качестве `messageString` будет приниматься строка, прочитанная из TCP-сокета
      */
     static Message Parse(const std::string& messageString) {
-        size_t messageLength = BytesToInt(messageString.substr(0, 4));
-        MessageId id = static_cast<MessageId>(messageString[4]);
-        std::string payload = messageString.substr(5, messageLength - 1);
+        MessageId id = static_cast<MessageId>(messageString[0]);
+        size_t messageLength = messageString.size(); // with id
+        std::string payload = messageString.substr(1, messageLength - 1);
         return {id, messageLength, payload};
     };
 
