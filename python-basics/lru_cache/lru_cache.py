@@ -2,7 +2,7 @@ from collections.abc import Callable, Hashable, Iterable
 from collections import OrderedDict, namedtuple
 from functools import wraps
 
-def lru_cache(max_items: int) -> Callable[[Callable], Callable]:
+def lru_cache(max_items: int) -> Callable:
     """
     Функция создает декоратор, позволяющий кэшировать результаты выполнения обернутой функции по принципу LRU-кэша.
     Размер LRU кэша ограничен количеством max_items. При попытке сохранить новый результат в кэш, в том случае, когда
