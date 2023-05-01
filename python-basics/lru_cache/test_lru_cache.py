@@ -35,6 +35,31 @@ def test_factorial():
     assert factorial.stats.cache_misses == misses_count_before + 20
 
 
+def test_lru_property():
+    @lru_cache(3)
+    def foo(bar):
+        return bar
+
+    foo(1)
+    foo(2)
+    foo(3)
+
+    assert foo.stats.cache_misses == 3
+    assert foo.stats.cache_hits == 0
+
+    foo(1)
+    assert foo.stats.cache_misses == 3
+    assert foo.stats.cache_hits == 1
+
+    foo(4)
+    assert foo.stats.cache_misses == 4
+    assert foo.stats.cache_hits == 1
+
+    foo(2)
+    assert foo.stats.cache_misses == 5
+    assert foo.stats.cache_hits == 1
+
+
 def test_complex_arguments():
     @lru_cache(5)
     def foo(bar: list, baz: dict) -> str:
