@@ -5,7 +5,12 @@
 /*
  * Преобразовать 4 байта в формате big endian в int
  */
-int BytesToInt(std::string_view bytes);
+size_t BytesToInt(std::string_view bytes);
+
+/*
+ * Преобразовать int в 4 байта в формате big endian
+ */
+std::string IntToBytes(size_t value);
 
 /*
  * Расчет SHA1 хеш-суммы. Здесь в результате подразумевается не человеко-читаемая строка, а массив из 20 байтов

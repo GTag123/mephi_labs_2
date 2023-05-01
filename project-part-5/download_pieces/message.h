@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <string>
+#include "byte_tools.h"
 
 /*
  * Тип сообщения в протоколе торрента.

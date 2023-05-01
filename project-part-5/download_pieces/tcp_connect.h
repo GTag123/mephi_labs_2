@@ -2,13 +2,17 @@
 
 #include <string>
 #include <chrono>
+#include "tcp_connect.h"
+#include "byte_tools.h"
 
 /*
  * Обертка над низкоуровневой структурой сокета.
  */
 class TcpConnect {
 public:
-    TcpConnect(std::string ip, int port, std::chrono::milliseconds connectTimeout, std::chrono::milliseconds readTimeout);
+    TcpConnect(std::string ip, int port, std::chrono::milliseconds connectTimeout,
+               std::chrono::milliseconds readTimeout);
+
     ~TcpConnect();
 
     /*
@@ -31,7 +35,7 @@ public:
      * Полезная информация:
      * - https://man7.org/linux/man-pages/man2/send.2.html
      */
-    void SendData(const std::string& data) const;
+    void SendData(const std::string &data) const;
 
     /*
      * Прочитать данные из сокета.
@@ -51,11 +55,16 @@ public:
      */
     void CloseConnection();
 
-    const std::string& GetIp() const;
+    const std::string &GetIp() const;
+
     int GetPort() const;
+
 private:
     const std::string ip_;
     const int port_;
     std::chrono::milliseconds connectTimeout_, readTimeout_;
-    int sock_;
+    int sockfd_;
+    int status = 0; // 0 - не открыто, 1 - открыто, 2 - закрыто
 };
+
+
