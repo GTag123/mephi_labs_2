@@ -7,6 +7,7 @@
 #include <filesystem>
 #include <random>
 #include <thread>
+#include <algorithm>
 
 namespace fs = std::filesystem;
 
