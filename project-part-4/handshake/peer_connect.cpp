@@ -21,7 +21,11 @@ void PeerPiecesAvailability::SetPieceAvailability(size_t pieceIndex) {
 }
 
 size_t PeerPiecesAvailability::Size() const {
-    return bitfield_.size() * 8;
+    size_t size = 0;
+    for (char c : bitfield_) {
+        size += __builtin_popcount(c);
+    }
+    return size;
 }
 
 PeerConnect::PeerConnect(const Peer &peer, const TorrentFile &tf, std::string selfPeerId) :
@@ -45,13 +49,10 @@ void PeerConnect::Run() {
 
 void PeerConnect::PerformHandshake() {
     this->socket_.EstablishConnection();
-
     std::string handshake = "BitTorrent protocol00000000" + this->tf_.infoHash +
                             this->selfPeerId_;
     handshake = ((char) 19) + handshake;
-
     this->socket_.SendData(handshake);
-
     std::string response = this->socket_.ReceiveData(68);
     if (response[0] != '\x13' || response.substr(1, 19) != "BitTorrent protocol") {
         throw std::runtime_error("Handshake failed");
