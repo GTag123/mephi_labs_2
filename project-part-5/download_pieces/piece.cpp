@@ -20,7 +20,7 @@ constexpr size_t BLOCK_SIZE = 1 << 14;
 //        blocks_[i].status = Block::Status::Missing;
 //    }
 //}
-Piece::Piece(size_t index, size_t length, std::string hash): index_(index), length_(length), hash_(std::move(hash)) {
+Piece::Piece(size_t index, size_t length, std::string hash): index_(index), length_(length), hash_(hash) {
     for (int i=0; i<length_; i+=BLOCK_SIZE) {
         Block block;
         block.piece = index_;
