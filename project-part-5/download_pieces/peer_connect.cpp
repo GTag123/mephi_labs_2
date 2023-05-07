@@ -126,20 +126,22 @@ void PeerConnect::MainLoop() {
                 break;
             case MessageId::Piece:
             {
-//                std::cout << "Piece" << std::endl;
+                std::cout << "Piece" << std::endl;
                 auto pieceIndex = BytesToInt(payload.substr(0, 4));
                 auto offset = BytesToInt(payload.substr(4, 4));
                 auto data = payload.substr(8, payload.size() - 8);
-                if (pieceInProgress_ && pieceInProgress_->GetIndex() == pieceIndex) {
-                    // надо бы чекать хэш и размер даты
-                    pieceInProgress_->SaveBlock(offset, data);
-                    if (pieceInProgress_->AllBlocksRetrieved()) {
-                        Terminate();
-//                        pieceInProgress_ = nullptr;
-                    }
-                }
+                pieceInProgress_->SaveBlock(offset, data);
+//                if (pieceInProgress_ && pieceInProgress_->GetIndex() == pieceIndex) {
+//                    // надо бы чекать хэш и размер даты
+//
+//                    if (pieceInProgress_->AllBlocksRetrieved()) {
+//                        Terminate();
+////                        pieceInProgress_ = nullptr;
+//                    }
+//                }
                 pendingBlock_ = false;
             }
+                Terminate();
                 break;
             case MessageId::Choke:
                 std::cout << "Choke" << std::endl;
@@ -152,6 +154,13 @@ void PeerConnect::MainLoop() {
             default:
                 std::cout << "Default" << std::endl;
                 break;
+        }
+        if (pieceInProgress_) {
+            std::cout << "Retrieved: " << pieceInProgress_->AllBlocksRetrieved() << std::endl;
+            if (pieceInProgress_->AllBlocksRetrieved()) {
+                pieceStorage_.PieceProcessed(pieceInProgress_);
+                Terminate();
+            }
         }
         if (!choked_ && !pendingBlock_) {
             RequestPiece();
