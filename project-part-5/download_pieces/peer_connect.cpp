@@ -141,7 +141,6 @@ void PeerConnect::MainLoop() {
 //                }
                 pendingBlock_ = false;
             }
-                Terminate();
                 break;
             case MessageId::Choke:
                 std::cout << "Choke" << std::endl;
