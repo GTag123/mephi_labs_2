@@ -7,6 +7,7 @@
 #include <sstream>
 #include <memory>
 
+
 TorrentFile LoadTorrentFile(const std::string& filename){
     std::ifstream file(filename, std::ios::binary);
     std::stringstream buffer;
