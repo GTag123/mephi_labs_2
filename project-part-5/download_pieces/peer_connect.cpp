@@ -126,7 +126,7 @@ void PeerConnect::MainLoop() {
                 break;
             case MessageId::Piece:
             {
-                std::cout << "Piece" << std::endl;с
+                std::cout << "Piece" << std::endl;
                 auto pieceIndex = BytesToInt(payload.substr(0, 4));
                 auto offset = BytesToInt(payload.substr(4, 4));
                 auto data = payload.substr(8, payload.size() - 8);
