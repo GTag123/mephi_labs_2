@@ -142,6 +142,9 @@ void PeerConnect::MainLoop() {
                 std::cout << "Unchoke" << std::endl;
                 choked_ = false;
                 break;
+            default:
+                std::cout << "Default" << std::endl;
+                break;
         }
         if (pieceInProgress_) {
             std::cout << "Retrieved: " << pieceInProgress_->AllBlocksRetrieved() << std::endl;
