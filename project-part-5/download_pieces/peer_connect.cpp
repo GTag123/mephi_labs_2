@@ -148,6 +148,7 @@ void PeerConnect::MainLoop() {
             std::cout << "Retrieved: " << pieceInProgress_->AllBlocksRetrieved() << std::endl;
             if (pieceInProgress_->AllBlocksRetrieved()) {
                 pieceStorage_.PieceProcessed(pieceInProgress_);
+                pieceInProgress_ = nullptr;
                 Terminate();
             }
         }
