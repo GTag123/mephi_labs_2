@@ -11,7 +11,7 @@ Piece::Piece(size_t index, size_t length, std::string hash)
     : index_(index)
     , length_(length)
     , hash_(std::move(hash)){
-    for (size_t i = 0; i < length / BLOCK_SIZE + (length % BLOCK_SIZE == 0 ? 0 : 1); i++) {
+    for (int i=0; i<length_; i+=BLOCK_SIZE) {
         Block block;
         block.piece = index_;
         block.offset = i;
