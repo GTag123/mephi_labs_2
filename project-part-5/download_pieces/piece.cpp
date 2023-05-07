@@ -16,6 +16,7 @@ Piece::Piece(size_t index, size_t length, std::string hash)
         blocks_[i].piece = index_;
         blocks_[i].offset = i * BLOCK_SIZE;
         blocks_[i].length = std::min(BLOCK_SIZE, length_ - i * BLOCK_SIZE);
+        blocks_[i].status = Block::Status::Missing;
     }
 }
 

@@ -172,6 +172,7 @@ void PeerConnect::RequestPiece() {
             return;
         }
     }
+    if (!pendingBlock_) {
         pendingBlock_ = true;
         auto block = pieceInProgress_->FirstMissingBlock();
         if (block) {
@@ -181,4 +182,5 @@ void PeerConnect::RequestPiece() {
             pieceInProgress_ = nullptr;
             pendingBlock_ = false;
         }
+    }
 }
