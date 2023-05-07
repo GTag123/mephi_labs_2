@@ -115,21 +115,20 @@ void PeerConnect::MainLoop() {
 
         // Обрабатываем сообщение
         MessageId id = static_cast<MessageId>(message[0]);
+        size_t pieceIndex, offset;
+        std::string data;
         std::string payload = message.substr(1, message.size() - 1);
         switch (id) {
             case MessageId::Have:
-            {
                 std::cout << "Have" << std::endl;
-                size_t pieceIndex = BytesToInt(payload.substr(0, 4));
+                pieceIndex = BytesToInt(payload.substr(0, 4));
                 piecesAvailability_.SetPieceAvailability(pieceIndex);
-            }
                 break;
             case MessageId::Piece:
-            {
                 std::cout << "Piece" << std::endl;
-                auto pieceIndex = BytesToInt(payload.substr(0, 4));
-                auto offset = BytesToInt(payload.substr(4, 4));
-                auto data = payload.substr(8, payload.size() - 8);
+                pieceIndex = BytesToInt(payload.substr(0, 4));
+                offset = BytesToInt(payload.substr(4, 4));
+                data = payload.substr(8, payload.size() - 8);
                 pieceInProgress_->SaveBlock(offset, data);
 //                if (pieceInProgress_ && pieceInProgress_->GetIndex() == pieceIndex) {
 //                    // надо бы чекать хэш и размер даты
@@ -140,7 +139,6 @@ void PeerConnect::MainLoop() {
 //                    }
 //                }
                 pendingBlock_ = false;
-            }
                 break;
             case MessageId::Choke:
                 std::cout << "Choke" << std::endl;
