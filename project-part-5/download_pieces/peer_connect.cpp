@@ -129,8 +129,14 @@ void PeerConnect::MainLoop() {
                 pieceIndex = BytesToInt(payload.substr(0, 4));
                 offset = BytesToInt(payload.substr(4, 4));
                 data = payload.substr(8, payload.size() - 8);
-                // check
-                pieceInProgress_->SaveBlock(offset, data);
+                if (pieceInProgress_ && pieceInProgress_->GetIndex() == pieceIndex) {
+                    // надо бы чекать хэш и размер даты
+                    pieceInProgress_->SaveBlock(offset, data);
+                    if (pieceInProgress_->AllBlocksRetrieved()) {
+                        Terminate();
+//                        pieceInProgress_ = nullptr;
+                    }
+                }
                 pendingBlock_ = false;
                 break;
             case MessageId::Choke:
@@ -144,13 +150,6 @@ void PeerConnect::MainLoop() {
             default:
                 std::cout << "Default" << std::endl;
                 break;
-        }
-        if (pieceInProgress_) {
-            std::cout << "Retrieved: " << pieceInProgress_->AllBlocksRetrieved() << std::endl;
-            if (pieceInProgress_->AllBlocksRetrieved()) {
-                pieceStorage_.PieceProcessed(pieceInProgress_);
-                Terminate();
-            }
         }
         if (!choked_ && !pendingBlock_) {
             RequestPiece();
