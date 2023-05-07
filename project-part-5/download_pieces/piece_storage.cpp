@@ -22,6 +22,7 @@ void PieceStorage::PieceProcessed(const PiecePtr& piece) {
     while (!remainPieces_.empty()) {
         remainPieces_.pop();
     }
+    SavePieceToDisk(piece);
 }
 
 bool PieceStorage::QueueIsEmpty() const {

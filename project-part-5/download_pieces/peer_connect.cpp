@@ -130,14 +130,6 @@ void PeerConnect::MainLoop() {
                 offset = BytesToInt(payload.substr(4, 4));
                 data = payload.substr(8, payload.size() - 8);
                 pieceInProgress_->SaveBlock(offset, data);
-//                if (pieceInProgress_ && pieceInProgress_->GetIndex() == pieceIndex) {
-//                    // надо бы чекать хэш и размер даты
-//
-//                    if (pieceInProgress_->AllBlocksRetrieved()) {
-//                        Terminate();
-////                        pieceInProgress_ = nullptr;
-//                    }
-//                }
                 pendingBlock_ = false;
                 break;
             case MessageId::Choke:
