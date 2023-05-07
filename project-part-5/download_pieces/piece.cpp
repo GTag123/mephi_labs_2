@@ -8,26 +8,16 @@ namespace {
 constexpr size_t BLOCK_SIZE = 1 << 14;
 }
 
-//Piece::Piece(size_t index, size_t length, std::string hash)
-//    : index_(index)
-//    , length_(length)
-//    , hash_(std::move(hash))
-//    , blocks_(length / BLOCK_SIZE + (length % BLOCK_SIZE == 0 ? 0 : 1)) {
-//    for (size_t i = 0; i < blocks_.size(); i++) {
-//        blocks_[i].piece = index_;
-//        blocks_[i].offset = i * BLOCK_SIZE;
-//        blocks_[i].length = std::min(BLOCK_SIZE, length_ - i * BLOCK_SIZE);
-//        blocks_[i].status = Block::Status::Missing;
-//    }
-//}
-Piece::Piece(size_t index, size_t length, std::string hash): index_(index), length_(length), hash_(hash) {
-    for (int i=0; i<length_; i+=BLOCK_SIZE) {
-        Block block;
-        block.piece = index_;
-        block.offset = i * BLOCK_SIZE;
-        block.length = std::min(BLOCK_SIZE, length_-i);
-        block.status = Block::Status::Missing;
-        blocks_.push_back(block);
+Piece::Piece(size_t index, size_t length, std::string hash)
+    : index_(index)
+    , length_(length)
+    , hash_(hash)
+    , blocks_(length / BLOCK_SIZE + (length % BLOCK_SIZE == 0 ? 0 : 1)) {
+    for (size_t i = 0; i < blocks_.size(); i++) {
+        blocks_[i].piece = index_;
+        blocks_[i].offset = i * BLOCK_SIZE;
+        blocks_[i].length = std::min(BLOCK_SIZE, length_ - i * BLOCK_SIZE);
+        blocks_[i].status = Block::Status::Missing;
     }
 }
 void Piece::Reset() {
