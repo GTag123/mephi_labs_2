@@ -52,8 +52,8 @@ bool Piece::HashMatches() const {
 }
 
 void Piece::SaveBlock(size_t blockOffset, std::string data) {
-    blocks_[blockOffset].data = std::move(data);
-    blocks_[blockOffset].status = Block::Status::Retrieved;
+    blocks_[blockOffset / BLOCK_SIZE].data = std::move(data);
+    blocks_[blockOffset / BLOCK_SIZE].status = Block::Status::Retrieved;
 }
 
 Block *Piece::FirstMissingBlock() {
