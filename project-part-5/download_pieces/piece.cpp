@@ -11,7 +11,7 @@ constexpr size_t BLOCK_SIZE = 1 << 14;
 Piece::Piece(size_t index, size_t length, std::string hash)
     : index_(index)
     , length_(length)
-    , hash_(hash)
+    , hash_(std::move(hash))
     , blocks_(length / BLOCK_SIZE + (length % BLOCK_SIZE == 0 ? 0 : 1)) {
     for (size_t i = 0; i < blocks_.size(); i++) {
         blocks_[i].piece = index_;
