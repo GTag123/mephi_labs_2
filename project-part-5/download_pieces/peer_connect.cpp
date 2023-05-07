@@ -120,13 +120,13 @@ void PeerConnect::MainLoop() {
             case MessageId::Have:
             {
                 std::cout << "Have" << std::endl;
-                size_t pieceIndex = BytesToInt(payload);
+                size_t pieceIndex = BytesToInt(payload.substr(0, 4));
                 piecesAvailability_.SetPieceAvailability(pieceIndex);
             }
                 break;
             case MessageId::Piece:
             {
-                std::cout << "Piece" << std::endl;
+//                std::cout << "Piece" << std::endl;
                 auto pieceIndex = BytesToInt(payload.substr(0, 4));
                 auto offset = BytesToInt(payload.substr(4, 4));
                 auto data = payload.substr(8, payload.size() - 8);
