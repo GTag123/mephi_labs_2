@@ -1,16 +1,36 @@
 #include "piece_storage.h"
 #include <iostream>
 
+PieceStorage::PieceStorage(const TorrentFile &tf) {
+    for (size_t i = 0; i < tf.length / tf.pieceLength; ++i) {
+        size_t length = (i == tf.length / tf.pieceLength - 1) ? tf.length % tf.pieceLength : tf.pieceLength;
+        remainPieces_.push(std::make_shared<Piece>(i, length, tf.pieceHashes[i]));
+    }
+}
+
 PiecePtr PieceStorage::GetNextPieceToDownload() {
+    if (remainPieces_.empty()) {
+        return nullptr;
+    }
+    auto piece = remainPieces_.front();
+    remainPieces_.pop();
+    return piece;
 }
 
 void PieceStorage::PieceProcessed(const PiecePtr& piece) {
+    // clear queue?
+    while (!remainPieces_.empty()) {
+        remainPieces_.pop();
+    }
 }
 
 bool PieceStorage::QueueIsEmpty() const {
+    return remainPieces_.empty();
 }
 
 size_t PieceStorage::TotalPiecesCount() const {
+    // TODO хз тут оставшихся частей или всего?
+    return remainPieces_.size();
 }
 
 void PieceStorage::SavePieceToDisk(PiecePtr piece) {
