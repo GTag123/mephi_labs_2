@@ -10,13 +10,14 @@ constexpr size_t BLOCK_SIZE = 1 << 14;
 Piece::Piece(size_t index, size_t length, std::string hash)
     : index_(index)
     , length_(length)
-    , hash_(std::move(hash))
-    , blocks_(length / BLOCK_SIZE + (length % BLOCK_SIZE == 0 ? 0 : 1)) {
-    for (size_t i = 0; i < blocks_.size(); i++) {
-        blocks_[i].piece = index_;
-        blocks_[i].offset = i;
-        blocks_[i].length = std::min(BLOCK_SIZE, length_ - i * BLOCK_SIZE);
-        blocks_[i].status = Block::Status::Missing;
+    , hash_(std::move(hash)){
+    for (size_t i = 0; i < length / BLOCK_SIZE + (length % BLOCK_SIZE == 0 ? 0 : 1); i++) {
+        Block block;
+        block.piece = index_;
+        block.offset = i;
+        block.length = std::min(BLOCK_SIZE, length_ - i * BLOCK_SIZE);
+        block.status = Block::Status::Missing;
+        blocks_.push_back(block);
     }
 }
 void Piece::Reset() {
