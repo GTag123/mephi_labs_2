@@ -133,8 +133,8 @@ void PeerConnect::MainLoop() {
                     // надо бы чекать хэш и размер даты
                     pieceInProgress_->SaveBlock(offset, data);
                     if (pieceInProgress_->AllBlocksRetrieved()) {
-                        pieceInProgress_ = nullptr;
                         pieceStorage_.PieceProcessed(pieceInProgress_);
+                        pieceInProgress_ = nullptr;
                         Terminate();
                     }
                 }
