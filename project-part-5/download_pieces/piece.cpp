@@ -10,7 +10,7 @@ constexpr size_t BLOCK_SIZE = 1 << 14;
 Piece::Piece(size_t index, size_t length, std::string hash)
     : index_(index)
     , length_(length)
-    , hash_(std::move(hash)){
+    , hash_(hash){
     for (int i=0; i<length_; i+=BLOCK_SIZE) {
         Block block;
         block.piece = index_;
