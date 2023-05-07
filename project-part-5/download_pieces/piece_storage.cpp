@@ -18,11 +18,15 @@ PiecePtr PieceStorage::GetNextPieceToDownload() {
 }
 
 void PieceStorage::PieceProcessed(const PiecePtr& piece) {
-    // clear queue?
+    if (!piece->HashMatches()) {
+        piece->Reset();
+        std::cerr << "Piece " << piece->GetIndex() << " hash doesn't match" << std::endl;
+        return;
+    }
+    SavePieceToDisk(piece);
     while (!remainPieces_.empty()) {
         remainPieces_.pop();
     }
-    SavePieceToDisk(piece);
 }
 
 bool PieceStorage::QueueIsEmpty() const {
