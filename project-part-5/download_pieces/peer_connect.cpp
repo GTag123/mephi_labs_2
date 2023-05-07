@@ -130,7 +130,13 @@ void PeerConnect::MainLoop() {
                 offset = BytesToInt(payload.substr(4, 4));
                 data = payload.substr(8, payload.size() - 8);
                 if (pieceInProgress_ && pieceInProgress_->GetIndex() == pieceIndex) {
+                    // надо бы чекать хэш и размер даты
                     pieceInProgress_->SaveBlock(offset, data);
+                    if (pieceInProgress_->AllBlocksRetrieved()) {
+                        pieceStorage_.PieceProcessed(pieceInProgress_);
+                        pieceInProgress_ = nullptr;
+                        Terminate();
+                    }
                 }
                 pendingBlock_ = false;
                 break;
@@ -146,19 +152,11 @@ void PeerConnect::MainLoop() {
                 std::cout << "Default" << std::endl;
                 break;
         }
-        if (pieceInProgress_) {
-            std::cout << "Retrieved: " << pieceInProgress_->AllBlocksRetrieved() << std::endl;
-            if (pieceInProgress_->AllBlocksRetrieved()) {
-                pieceStorage_.PieceProcessed(pieceInProgress_);
-                Terminate();
-            }
-        }
         if (!choked_ && !pendingBlock_) {
             RequestPiece();
         }
     }
 }
-
 
 /*
      * Функция отправляет пиру сообщение типа request. Это сообщение обозначает запрос части файла у пира.
