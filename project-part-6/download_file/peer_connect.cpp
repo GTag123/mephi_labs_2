@@ -35,7 +35,8 @@ PeerConnect::PeerConnect(const Peer &peer, const TorrentFile &tf, std::string se
         // peer id?
         terminated_(false),
         choked_(true),
-        pieceStorage_(pieceStorage) {}
+        pieceStorage_(pieceStorage),
+        pendingBlock_(false) {}
 
 void PeerConnect::Run() {
     while (!terminated_) {
@@ -45,6 +46,7 @@ void PeerConnect::Run() {
         } else {
             std::cerr << "Cannot establish connection to peer" << std::endl;
             Terminate();
+            failed_ = true;
         }
     }
 }
@@ -134,7 +136,6 @@ void PeerConnect::MainLoop() {
                     if (pieceInProgress_->AllBlocksRetrieved()) {
                         pieceStorage_.PieceProcessed(pieceInProgress_);
                         pieceInProgress_ = nullptr;
-                        Terminate();
                     }
                 }
                 pendingBlock_ = false;

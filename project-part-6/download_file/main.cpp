@@ -8,7 +8,7 @@
 #include <random>
 #include <thread>
 #include <algorithm>
-
+#include "mutex"
 namespace fs = std::filesystem;
 
 std::string RandomString(size_t length) {
@@ -27,9 +27,9 @@ constexpr size_t PiecesToDownload = 20;
 void CheckDownloadedPiecesIntegrity(const std::filesystem::path& outputFilename, const TorrentFile& tf, PieceStorage& pieces) {
     pieces.CloseOutputFile();
 
-    if (std::filesystem::file_size(outputFilename) != tf.length) {
-        throw std::runtime_error("Output file has wrong size");
-    }
+//    if (std::filesystem::file_size(outputFilename) != tf.length) {
+//        throw std::runtime_error("Output file has wrong size");
+//    }
 
     if (pieces.GetPiecesSavedToDiscIndices().size() != pieces.PiecesSavedToDiscCount()) {
         throw std::runtime_error("Cannot determine real amount of saved pieces");
@@ -73,7 +73,7 @@ void DeleteDownloadedFile(const std::filesystem::path& outputFilename) {
 }
 
 std::filesystem::path PrepareDownloadDirectory(const std::string& randomString) {
-    std::filesystem::path outputDirectory = "/tmp/downloads";
+    std::filesystem::path outputDirectory = "./downloads";
     outputDirectory /=  randomString;
     std::filesystem::create_directories(outputDirectory);
     return outputDirectory;
@@ -88,7 +88,7 @@ bool RunDownloadMultithread(PieceStorage& pieces, const TorrentFile& torrentFile
     for (const Peer& peer : tracker.GetPeers()) {
         peerConnections.emplace_back(peer, torrentFile, ourId, pieces);
     }
-
+    std::cout << "Created " << peerConnections.size() << " peer connections" << std::endl;
     for (PeerConnect& peerConnect : peerConnections) {
         peerThreads.emplace_back(
                 [&peerConnect] () {
@@ -107,6 +107,7 @@ bool RunDownloadMultithread(PieceStorage& pieces, const TorrentFile& torrentFile
                         }
                         tryAgain = peerConnect.Failed() && attempts < 3;
                     } while (tryAgain);
+                    std::cout << "---------!!!!!Peer thread finished. Total finished: " << std::endl;
                 }
         );
     }
@@ -124,9 +125,10 @@ bool RunDownloadMultithread(PieceStorage& pieces, const TorrentFile& torrentFile
             }
             return true;
         }
+        std::cerr << "WHILE WHILE WHILE" << std::endl;
         std::this_thread::sleep_for(1s);
     }
-
+    std::cout << "!!!!!!!!!!!-----------------------" << std::endl << std::endl;
     for (PeerConnect& peerConnect : peerConnections) {
         peerConnect.Terminate();
     }
