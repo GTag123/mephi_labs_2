@@ -5,7 +5,7 @@
 #include <queue>
 #include <string>
 #include <unordered_set>
-#include <shared_mutex>
+#include <mutex>
 #include <fstream>
 #include <filesystem>
 #include <set>
@@ -66,7 +66,7 @@ private:
     bool isOutputFileOpen_;;
     std::set<size_t> piecesSavedToDiscIndicesSet_;
     std::vector<size_t> piecesSavedToDiscIndicesVector_;
-    mutable std::shared_mutex mutex_;
+    mutable std::mutex mutex_;
     /*
      * Сохраняет данную скачанную часть файла на диск.
      * Сохранение всех частей происходит в один выходной файл. Позиция записываемых данных зависит от индекса части
