@@ -18,6 +18,7 @@ PiecePtr PieceStorage::GetNextPieceToDownload() {
 }
 
 void PieceStorage::PieceProcessed(const PiecePtr& piece) {
+    // хз, что будет если пир постоянно будет отправлять бракованный кусок,peer_connect будет же крутиться в бесконечном цикле
     if (!piece->HashMatches()) {
         piece->Reset();
         std::cerr << "Piece " << piece->GetIndex() << " hash doesn't match" << std::endl;

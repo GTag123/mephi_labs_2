@@ -7,3 +7,5 @@ def flatten(iterable: Iterable) -> Generator:
             yield from flatten(item)
         else:
             yield item
+
+[1, [1,2,3], [4,5,6]]
