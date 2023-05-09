@@ -17,6 +17,11 @@ PiecePtr PieceStorage::GetNextPieceToDownload() {
     return piece;
 }
 
+void PieceStorage::AddPieceToQueue(const PiecePtr &piece) {
+    remainPieces_.push(piece);
+}
+
+
 void PieceStorage::PieceProcessed(const PiecePtr& piece) {
     // хз, что будет если пир постоянно будет отправлять бракованный кусок,peer_connect будет же крутиться в бесконечном цикле
     if (!piece->HashMatches()) {

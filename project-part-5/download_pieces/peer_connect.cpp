@@ -168,6 +168,10 @@ void PeerConnect::RequestPiece() {
     std::string request = IntToBytes(13) + static_cast<char>(MessageId::Request);
     if (!pieceInProgress_) {
         auto piece = pieceStorage_.GetNextPieceToDownload(); // надо чекать доступен ли кусок!!!!!
+        while (piece && !piecesAvailability_.IsPieceAvailable(piece->GetIndex())) {
+            pieceStorage_.AddPieceToQueue(piece);
+            piece = pieceStorage_.GetNextPieceToDownload();
+        }
         pieceInProgress_ = piece;
         if (!pieceInProgress_) {
             return;
