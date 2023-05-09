@@ -31,6 +31,7 @@ public:
      */
     bool QueueIsEmpty() const;
 
+
     /*
      * Сколько частей файла всего
      */
