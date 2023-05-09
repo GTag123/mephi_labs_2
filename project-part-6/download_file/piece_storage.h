@@ -73,5 +73,4 @@ private:
      * и размера частей. Данные, содержащиеся в части файла, должны быть записаны сразу в правильную позицию.
      */
     void SavePieceToDisk(const PiecePtr& piece);
-    void SavePieceToDiskImpl(const PiecePtr& piece);
 };

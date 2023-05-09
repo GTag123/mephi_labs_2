@@ -33,7 +33,7 @@ void PieceStorage::PieceProcessed(const PiecePtr& piece) {
         std::cerr << "Piece " << piece->GetIndex() << " hash doesn't match" << std::endl;
         return;
     }
-    SavePieceToDiskImpl(piece);
+    SavePieceToDisk(piece);
 }
 
 bool PieceStorage::QueueIsEmpty() const {
@@ -74,12 +74,8 @@ size_t PieceStorage::PiecesSavedToDiscCount() const {
     return piecesSavedToDiscIndicesSet_.size();
 }
 
-void PieceStorage::SavePieceToDisk(const PiecePtr &piece) {
-    std::unique_lock<std::shared_mutex> lock(mutex_);
-    SavePieceToDiskImpl(piece);
-}
 
-void PieceStorage::SavePieceToDiskImpl(const PiecePtr &piece) {
+void PieceStorage::SavePieceToDisk(const PiecePtr &piece) {
     if (!isOutputFileOpen_) {
         std::cerr << "Output file is already closed" << std::endl;
         return;
