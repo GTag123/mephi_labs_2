@@ -31,7 +31,7 @@ size_t PeerPiecesAvailability::Size() const {
 PeerConnect::PeerConnect(const Peer &peer, const TorrentFile &tf, std::string selfPeerId, PieceStorage &pieceStorage) :
         peerinfo(peer),
         tf_(tf),
-        socket_(peer.ip, peer.port, 500ms, 500ms),
+        socket_(peer.ip, peer.port, 1s, 1s),
         selfPeerId_(std::move(selfPeerId)),
         // peer id?
         terminated_(false),

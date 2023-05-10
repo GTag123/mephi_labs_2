@@ -47,7 +47,7 @@ void TcpConnect::EstablishConnection() {
     pfd.events = POLLOUT;
     ret = poll(&pfd, 1, connectTimeout_.count());
     if (ret == 0) {
-        throw std::runtime_error("Connection timed out");
+        throw std::runtime_error("Connection in establish timed out");
     } else if (ret < 0) {
         throw std::runtime_error("Error while connecting to remote host");
     } else {

@@ -7,7 +7,7 @@ PieceStorage::PieceStorage(const TorrentFile& tf, const std::filesystem::path& o
     out_(outputDirectory_ / tf_.name, std::ios::binary | std::ios::in | std::ios::out),
     isOutputFileOpen_(true) {
     std::cout << " OPENED STREAM: " << out_.is_open() << std::endl;
-    std::cout << "NAME IS " <<tf_.name <<std::endl;
+    std::cout << "NAME IS " << tf_.name << std::endl;
     for (size_t i = 0; i < tf.length / tf.pieceLength; ++i) {
         size_t length = (i == tf.length / tf.pieceLength - 1) ? tf.length % tf.pieceLength : tf.pieceLength;
         remainPieces_.push(std::make_shared<Piece>(i, length, tf.pieceHashes[i]));
