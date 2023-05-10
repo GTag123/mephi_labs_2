@@ -26,5 +26,6 @@ TorrentFile LoadTorrentFile(const std::string& filename){
         torrent.pieceHashes.push_back(piecesHash.substr(i, 20));
     }
     torrent.infoHash = Bencode::hashing(*dict);
+    torrent.name = std::dynamic_pointer_cast<BencodeString>(std::dynamic_pointer_cast<BencodeDictionary>(dict->get("info"))->get("name"))->get_str();
     return torrent;
 }
