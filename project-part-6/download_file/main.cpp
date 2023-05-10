@@ -11,6 +11,8 @@
 #include "mutex"
 namespace fs = std::filesystem;
 
+std::mutex mtx;
+int counter = 0;
 std::string RandomString(size_t length) {
     std::random_device random;
     std::string result;
@@ -26,10 +28,10 @@ constexpr size_t PiecesToDownload = 20;
 
 void CheckDownloadedPiecesIntegrity(const std::filesystem::path& outputFilename, const TorrentFile& tf, PieceStorage& pieces) {
     pieces.CloseOutputFile();
-
-//    if (std::filesystem::file_size(outputFilename) != tf.length) {
-//        throw std::runtime_error("Output file has wrong size");
-//    }
+    std::cout << "Check path: " << outputFilename.string() << std::endl;
+    if (std::filesystem::file_size(outputFilename) != tf.length) {
+        throw std::runtime_error("Output file has wrong size");
+    }
 
     if (pieces.GetPiecesSavedToDiscIndices().size() != pieces.PiecesSavedToDiscCount()) {
         throw std::runtime_error("Cannot determine real amount of saved pieces");
@@ -58,13 +60,13 @@ void CheckDownloadedPiecesIntegrity(const std::filesystem::path& outputFilename,
         const size_t readBytesCount = file.gcount();
         pieceDataFromFile.resize(readBytesCount);
         const std::string realHash = CalculateSHA1(pieceDataFromFile);
-
         if (realHash != tf.pieceHashes[pieceIndex]) {
             std::cerr << "File piece with index " << pieceIndex << " started at position " << positionInFile <<
                       " with length " << pieceDataFromFile.length() << " has wrong hash " << HexEncode(realHash) <<
                       ". Expected hash is " << HexEncode(tf.pieceHashes[pieceIndex]) << std::endl;
             throw std::runtime_error("Wrong piece hash");
         }
+        std::cout << "Correct data:\n" << pieceDataFromFile << std::endl;
     }
 }
 
@@ -107,7 +109,11 @@ bool RunDownloadMultithread(PieceStorage& pieces, const TorrentFile& torrentFile
                         }
                         tryAgain = peerConnect.Failed() && attempts < 3;
                     } while (tryAgain);
-                    std::cout << "---------!!!!!Peer thread finished. Total finished: " << std::endl;
+                    mtx.lock();
+                    counter++;
+                    std::cout << std::endl << "---------!!!!!Peer thread finished. Total finished: " << counter << std::endl;
+                    std::cout << "Ip: " << peerConnect.peerinfo.ip << " Port: " << peerConnect.peerinfo.port << std::endl << std::endl;
+                    mtx.unlock();
                 }
         );
     }

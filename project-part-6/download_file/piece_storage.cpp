@@ -88,4 +88,7 @@ void PieceStorage::SavePieceToDisk(const PiecePtr &piece) {
     piecesSavedToDiscIndicesVector_.push_back(piece->GetIndex());
     out_.seekp(piece->GetIndex() * tf_.pieceLength);
     out_.write(piece->GetData().data(), piece->GetData().size());
+//    out_.write("hello", 5);
+    std::cout << "Saved to Disk piece " << piece->GetIndex() << std::endl;
+    std::cout << "Piece data length: " << piece->GetData().size() << std::endl;
 }

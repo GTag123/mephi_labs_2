@@ -29,6 +29,7 @@ size_t PeerPiecesAvailability::Size() const {
 }
 
 PeerConnect::PeerConnect(const Peer &peer, const TorrentFile &tf, std::string selfPeerId, PieceStorage &pieceStorage) :
+        peerinfo(peer),
         tf_(tf),
         socket_(peer.ip, peer.port, 500ms, 500ms),
         selfPeerId_(std::move(selfPeerId)),
@@ -110,6 +111,12 @@ void PeerConnect::Terminate() {
 
 void PeerConnect::MainLoop() {
     while (!terminated_) {
+        if (pieceStorage_.QueueIsEmpty()) {
+            std::cout << "---Queue is empty. Terminate" << std::endl;
+            Terminate();
+            continue;
+        }
+
         auto message = socket_.ReceiveData();
         if (message.empty()) {
             continue;
@@ -174,6 +181,7 @@ void PeerConnect::RequestPiece() {
         }
         pieceInProgress_ = piece;
         if (!pieceInProgress_) {
+            choked_ = true;
             return;
         }
     }
@@ -187,6 +195,7 @@ void PeerConnect::RequestPiece() {
         } else {
             pieceInProgress_ = nullptr;
             pendingBlock_ = false;
+            RequestPiece();
         }
     }
 }
@@ -194,3 +203,4 @@ void PeerConnect::RequestPiece() {
 bool PeerConnect::Failed() const {
     return failed_;
 }
+

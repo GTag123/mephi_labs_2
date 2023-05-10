@@ -56,6 +56,7 @@ public:
      * Соединение не удалось установить или оно было разорвано в результате ошибки.
      */
     bool Failed() const;
+    const Peer& peerinfo;
 private:
     const TorrentFile& tf_;
     TcpConnect socket_;  // tcp-соединение с пиром
