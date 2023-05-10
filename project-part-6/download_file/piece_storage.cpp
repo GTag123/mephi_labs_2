@@ -52,7 +52,7 @@ size_t PieceStorage::TotalPiecesCount() const {
 
 size_t PieceStorage::PiecesInProgressCount() const {
     std::lock_guard lock(mutex_);
-    return TotalPiecesCount() - remainPieces_.size();
+    return tf_.length / tf_.pieceLength - remainPieces_.size();
 }
 
 void PieceStorage::CloseOutputFile() {
@@ -93,4 +93,5 @@ void PieceStorage::SavePieceToDisk(const PiecePtr &piece) {
 //    out_.write("hello", 5);
     std::cout << "Saved to Disk piece " << piece->GetIndex() << std::endl;
     std::cout << "Piece data length: " << piece->GetData().size() << std::endl;
+    std::cout << "PieceQueue size: " << remainPieces_.size() << std::endl;
 }
