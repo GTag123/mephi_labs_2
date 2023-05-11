@@ -75,11 +75,13 @@ std::string TcpConnect::ReceiveData(size_t bufferSize) const {
     struct pollfd pfd;
     pfd.fd = sockfd_;
     pfd.events = POLLIN;
-
     size_t len = 4;
     if (bufferSize > 0) {
         len = bufferSize;
     } else {
+//        int flags = fcntl(sockfd_, F_GETFL, 0);
+//        fcntl(sockfd_, F_SETFL, flags | O_NONBLOCK);
+//        std::cout << "Wait bytes" << std::endl;
         std::string lenbuf(4, 0);
         char *lenbufptr = &lenbuf[0];
         while (len > 0) {
@@ -98,6 +100,7 @@ std::string TcpConnect::ReceiveData(size_t bufferSize) const {
             }
         }
         len = BytesToInt(lenbuf);
+//        std::cout << "Bytes received" << std::endl;
     }
     std::string data(len, 0);
     char *buf = &data[0];

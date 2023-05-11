@@ -30,6 +30,7 @@ void CheckDownloadedPiecesIntegrity(const std::filesystem::path& outputFilename,
     pieces.CloseOutputFile();
     std::cout << "Check path: " << outputFilename.string() << std::endl;
     if (std::filesystem::file_size(outputFilename) != tf.length) {
+        std::cerr << "Wrong size: " << std::filesystem::file_size(outputFilename) << "\nWaited size: " << tf.length << std::endl;
         throw std::runtime_error("Output file has wrong size");
     }
 
@@ -66,7 +67,7 @@ void CheckDownloadedPiecesIntegrity(const std::filesystem::path& outputFilename,
                       ". Expected hash is " << HexEncode(tf.pieceHashes[pieceIndex]) << std::endl;
             throw std::runtime_error("Wrong piece hash");
         }
-        std::cout << "Correct data:\n" << pieceDataFromFile << std::endl;
+//        std::cout << "Correct data:\n" << pieceDataFromFile << std::endl;
     }
 }
 
@@ -99,7 +100,13 @@ bool RunDownloadMultithread(PieceStorage& pieces, const TorrentFile& torrentFile
                     do {
                         try {
                             ++attempts;
+                            mtx.lock();
+                            std::cout << std::endl << "Ip: " << peerConnect.peerinfo.ip << " Port: " << peerConnect.peerinfo.port << std::endl;
+                            mtx.unlock();
                             peerConnect.Run();
+                            mtx.lock();
+                            std::cout << "Run finished" << std::endl << std::endl;
+                            mtx.unlock();
                         } catch (const std::runtime_error& e) {
                             std::cerr << "Runtime error: " << e.what() << std::endl;
                         } catch (const std::exception& e) {
@@ -112,7 +119,6 @@ bool RunDownloadMultithread(PieceStorage& pieces, const TorrentFile& torrentFile
                     mtx.lock();
                     counter++;
                     std::cout << std::endl << "---------!!!!!Peer thread finished. Total finished: " << counter << std::endl;
-                    std::cout << "Ip: " << peerConnect.peerinfo.ip << " Port: " << peerConnect.peerinfo.port << std::endl << std::endl;
                     mtx.unlock();
                 }
         );

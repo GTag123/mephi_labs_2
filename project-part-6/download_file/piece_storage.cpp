@@ -6,6 +6,8 @@ PieceStorage::PieceStorage(const TorrentFile& tf, const std::filesystem::path& o
     outputDirectory_(outputDirectory),
     out_(outputDirectory_ / tf_.name, std::ios::binary | std::ios::out),
     isOutputFileOpen_(true) {
+    out_.seekp(tf.length - 1);
+    out_.write("\0", 1);
     std::cout << " OPENED STREAM: " << out_.is_open() << std::endl;
     std::cout << "NAME IS " << tf_.name << std::endl;
     for (size_t i = 0; i < tf.length / tf.pieceLength; ++i) {
@@ -46,7 +48,6 @@ bool PieceStorage::QueueIsEmpty() const {
 size_t PieceStorage::TotalPiecesCount() const {
     // TODO хз тут оставшихся частей или всего?
 //    return remainPieces_.size();
-    std::lock_guard lock(mutex_);
     return tf_.length / tf_.pieceLength;
 }
 

@@ -70,9 +70,13 @@ void PeerConnect::PerformHandshake() {
 
 bool PeerConnect::EstablishConnection() {
     try {
+        std::cout << "Before handshake " << peerinfo.ip << std::endl;
         PerformHandshake();
+        std::cout << "Before receive bitfiled " << peerinfo.ip << std::endl;
         ReceiveBitfield();
+        std::cout << "Before send interested " << peerinfo.ip << std::endl;
         SendInterested();
+        std::cout << "After establish " << peerinfo.ip << std::endl;
         return true;
     } catch (const std::exception &e) {
         std::cerr << "Failed to establish connection with peer " << socket_.GetIp() << ":" <<
