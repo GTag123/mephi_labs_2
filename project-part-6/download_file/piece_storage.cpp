@@ -4,7 +4,7 @@
 PieceStorage::PieceStorage(const TorrentFile& tf, const std::filesystem::path& outputDirectory) :
     tf_(tf),
     outputDirectory_(outputDirectory),
-    out_(outputDirectory_ / tf_.name, std::ios::binary | std::ios::in | std::ios::out),
+    out_(outputDirectory_ / tf_.name, std::ios::binary | std::ios::out),
     isOutputFileOpen_(true) {
     std::cout << " OPENED STREAM: " << out_.is_open() << std::endl;
     std::cout << "NAME IS " << tf_.name << std::endl;
