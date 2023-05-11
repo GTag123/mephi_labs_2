@@ -16,6 +16,7 @@ PieceStorage::PieceStorage(const TorrentFile& tf, const std::filesystem::path& o
     }
 }
 
+
 PiecePtr PieceStorage::GetNextPieceToDownload() {
     std::lock_guard lock(mutex_);
     if (remainPieces_.empty()) {
