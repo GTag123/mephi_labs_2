@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.16)
-project(download-file CXX)
+project(torrent-client-prototype CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
 add_compile_options(-fsanitize=address)
 add_link_options(-fsanitize=address)
 
