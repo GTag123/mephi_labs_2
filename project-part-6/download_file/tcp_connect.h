@@ -4,7 +4,7 @@
 #include <chrono>
 #include "tcp_connect.h"
 #include "byte_tools.h"
-
+#include <atomic>
 /*
  * Обертка над низкоуровневой структурой сокета.
  */
@@ -59,6 +59,7 @@ public:
 
     int GetPort() const;
 
+//    mutable std::atomic<int> stack = 0;
 private:
     const std::string ip_;
     const int port_;

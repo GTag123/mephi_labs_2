@@ -28,7 +28,8 @@ size_t PeerPiecesAvailability::Size() const {
     return size;
 }
 
-PeerConnect::PeerConnect(const Peer &peer, const TorrentFile &tf, std::string selfPeerId, PieceStorage &pieceStorage) :
+PeerConnect::PeerConnect(std::atomic<int>& peerscounter, const Peer &peer, const TorrentFile &tf, std::string selfPeerId, PieceStorage &pieceStorage) :
+        peerscounter_(peerscounter),
         peerinfo(peer),
         tf_(tf),
         socket_(peer.ip, peer.port, 1500ms, 1500ms),
@@ -37,19 +38,33 @@ PeerConnect::PeerConnect(const Peer &peer, const TorrentFile &tf, std::string se
         terminated_(false),
         choked_(true),
         pieceStorage_(pieceStorage),
-        pendingBlock_(false) {}
+        pendingBlock_(false) {
+    peerscounter++;
+}
 
-void PeerConnect::Run() {
+void PeerConnect::Run(std::atomic<int>& cntstart, std::atomic<int>& cntestablish, std::atomic<int>& cntbegin) {
+    cntbegin++;
+    std::cout << "-!-!-!-!-!-! Begin " << cntbegin.load() << std::endl;
     while (!terminated_) {
-        if (EstablishConnection()) {
-            std::cout << "Connection established to peer" << std::endl;
-            MainLoop();
+        if (EstablishConnection(cntestablish)) {
+            cntstart++;
+            std::cout << "-!-!-!-!-!-!-!-! Start Connection established to peer " << cntstart.load() << std::endl;
+            try {
+                MainLoop();
+            } catch (const std::exception& e) {
+                std::cerr << "Exception: " << e.what() << std::endl;
+//                throw e;
+            }
+            cntstart--;
+            std::cout << "-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-!-! Main loop stopped " << cntstart.load() <<  std::endl;
         } else {
             std::cerr << "Cannot establish connection to peer" << std::endl;
             Terminate();
             failed_ = true;
         }
     }
+    cntbegin--;
+    std::cout << "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ End: " << cntbegin.load() << std::endl;
 }
 
 void PeerConnect::PerformHandshake() {
@@ -68,19 +83,25 @@ void PeerConnect::PerformHandshake() {
 
 }
 
-bool PeerConnect::EstablishConnection() {
+bool PeerConnect::EstablishConnection(std::atomic<int>& check) {
+    check++;
+    std::cout << "@-@-@-@-@-@-@-@-@-@-@-Established started: " << check << std::endl;
     try {
-        std::cout << "Before handshake " << peerinfo.ip << std::endl;
+//        std::cout << "Before handshake " << peerinfo.ip << std::endl;
         PerformHandshake();
-        std::cout << "Before receive bitfiled " << peerinfo.ip << std::endl;
+//        std::cout << "Before receive bitfiled " << peerinfo.ip << std::endl;
         ReceiveBitfield();
-        std::cout << "Before send interested " << peerinfo.ip << std::endl;
+//        std::cout << "Before send interested " << peerinfo.ip << std::endl;
         SendInterested();
-        std::cout << "After establish " << peerinfo.ip << std::endl;
+//        std::cout << "After establish " << peerinfo.ip << std::endl;
+        check--;
+        std::cout << "@-@-@-@-@-@-@-@-@-@-@-Established remains: " << check << std::endl;
         return true;
     } catch (const std::exception &e) {
         std::cerr << "Failed to establish connection with peer " << socket_.GetIp() << ":" <<
                   socket_.GetPort() << " -- " << e.what() << std::endl;
+        check--;
+        std::cout << "@-@-@-@-@-@-@-@-@-@-@-Established remains: " << check << std::endl;
         return false;
     }
 }
@@ -109,12 +130,13 @@ void PeerConnect::SendInterested() {
 }
 
 void PeerConnect::Terminate() {
-    std::cerr << "Terminate" << std::endl;
+    std::cerr << "Terminate. Remain: " << --peerscounter_ << std::endl;
     terminated_ = true;
 }
 
 void PeerConnect::MainLoop() {
     while (!terminated_) {
+//        std::cout << "While terminated" << std::endl;
         if (pieceStorage_.QueueIsEmpty()) {
             std::cout << "---Queue is empty. Terminate" << std::endl;
             Terminate();
@@ -132,7 +154,7 @@ void PeerConnect::MainLoop() {
         std::string payload = message.substr(1, message.size() - 1);
         switch (id) {
             case MessageId::Have:
-                std::cout << "Have" << std::endl;
+//                std::cout << "Have" << std::endl;
                 pieceIndex = BytesToInt(payload.substr(0, 4));
                 piecesAvailability_.SetPieceAvailability(pieceIndex);
                 break;
@@ -152,15 +174,15 @@ void PeerConnect::MainLoop() {
                 pendingBlock_ = false;
                 break;
             case MessageId::Choke:
-                std::cout << "Choke" << std::endl;
+//                std::cout << "Choke" << std::endl;
                 Terminate();
                 break;
             case MessageId::Unchoke:
-                std::cout << "Unchoke" << std::endl;
+//                std::cout << "Unchoke" << std::endl;
                 choked_ = false;
                 break;
             default:
-                std::cout << "Default" << std::endl;
+//                std::cout << "Default" << std::endl;
                 break;
         }
         if (!choked_ && !pendingBlock_) {

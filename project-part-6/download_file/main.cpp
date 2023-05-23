@@ -9,10 +9,14 @@
 #include <thread>
 #include <algorithm>
 #include "mutex"
+#include "atomic"
 namespace fs = std::filesystem;
-
+std::atomic<int> cntstart = 0;
+std::atomic<int> cntbegin = 0;
+std::atomic<int> cntend = 0;
 std::mutex mtx;
 int counter = 0;
+std::atomic<int> peerconnectsremais = 0;
 std::string RandomString(size_t length) {
     std::random_device random;
     std::string result;
@@ -89,7 +93,7 @@ bool RunDownloadMultithread(PieceStorage& pieces, const TorrentFile& torrentFile
     std::vector<PeerConnect> peerConnections;
 
     for (const Peer& peer : tracker.GetPeers()) {
-        peerConnections.emplace_back(peer, torrentFile, ourId, pieces);
+        peerConnections.emplace_back(peerconnectsremais, peer, torrentFile, ourId, pieces);
     }
     std::cout << "Created " << peerConnections.size() << " peer connections" << std::endl;
     for (PeerConnect& peerConnect : peerConnections) {
@@ -103,9 +107,9 @@ bool RunDownloadMultithread(PieceStorage& pieces, const TorrentFile& torrentFile
                             mtx.lock();
                             std::cout << std::endl << "Ip: " << peerConnect.peerinfo.ip << " Port: " << peerConnect.peerinfo.port << std::endl;
                             mtx.unlock();
-                            peerConnect.Run();
+                            peerConnect.Run(cntstart, cntend, cntbegin);
                             mtx.lock();
-                            std::cout << "Run finished" << std::endl << std::endl;
+                            std::cout << "Run finished " << counter << std::endl << std::endl;
                             mtx.unlock();
                         } catch (const std::runtime_error& e) {
                             std::cerr << "Runtime error: " << e.what() << std::endl;
@@ -118,7 +122,7 @@ bool RunDownloadMultithread(PieceStorage& pieces, const TorrentFile& torrentFile
                     } while (tryAgain);
                     mtx.lock();
                     counter++;
-                    std::cout << std::endl << "---------!!!!!Peer thread finished. Total finished: " << counter << std::endl;
+//                    std::cout << std::endl << "---------!!!!!Peer thread finished. Total finished: " << counter << std::endl;
                     mtx.unlock();
                 }
         );
@@ -128,8 +132,10 @@ bool RunDownloadMultithread(PieceStorage& pieces, const TorrentFile& torrentFile
     while (pieces.PiecesSavedToDiscCount() < PiecesToDownload) {
         if (pieces.PiecesInProgressCount() == 0) {
             std::cerr << "Want to download more pieces but all peer connections are not working. Let's request new peers" << std::endl;
-
+            int termcount = 0;
             for (PeerConnect& peerConnect : peerConnections) {
+                termcount++;
+                std::cout << "Terminate count: " << termcount << std::endl;
                 peerConnect.Terminate();
             }
             for (std::thread& thread : peerThreads) {
@@ -186,8 +192,9 @@ void TestTorrentFile(const fs::path& file) {
     PieceStorage pieces(torrentFile, outputDirectory);
 
     DownloadTorrentFile(torrentFile, pieces, PeerId);
-
+    std::cout << "Downloaded" << std::endl;
     CheckDownloadedPiecesIntegrity(outputDirectory / torrentFile.name, torrentFile, pieces);
+    std::cout << "Checked" << std::endl;
     DeleteDownloadedFile(outputDirectory / torrentFile.name);
 }
 

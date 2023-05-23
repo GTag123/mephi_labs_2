@@ -8,7 +8,7 @@ PieceStorage::PieceStorage(const TorrentFile& tf, const std::filesystem::path& o
     isOutputFileOpen_(true) {
     out_.seekp(tf.length - 1);
     out_.write("\0", 1);
-    std::cout << " OPENED STREAM: " << out_.is_open() << std::endl;
+    std::cout << "OPENED STREAM: " << out_.is_open() << std::endl;
     std::cout << "NAME IS " << tf_.name << std::endl;
     for (size_t i = 0; i < tf.length / tf.pieceLength; ++i) {
         size_t length = (i == tf.length / tf.pieceLength - 1) ? tf.length % tf.pieceLength : tf.pieceLength;
@@ -36,6 +36,7 @@ void PieceStorage::PieceProcessed(const PiecePtr& piece) {
     if (!piece->HashMatches()) {
         piece->Reset();
         std::cerr << "Piece " << piece->GetIndex() << " hash doesn't match" << std::endl;
+        remainPieces_.push(piece);
         return;
     }
     SavePieceToDisk(piece);
@@ -47,8 +48,6 @@ bool PieceStorage::QueueIsEmpty() const {
 }
 
 size_t PieceStorage::TotalPiecesCount() const {
-    // TODO хз тут оставшихся частей или всего?
-//    return remainPieces_.size();
     return tf_.length / tf_.pieceLength;
 }
 
@@ -69,7 +68,6 @@ void PieceStorage::CloseOutputFile() {
 
 const std::vector<size_t>& PieceStorage::GetPiecesSavedToDiscIndices() const { // проблемный метод
     std::lock_guard lock(mutex_);
-    std::cout << "---GetPiecesSavedToDiscIndices---" << std::endl;
     return piecesSavedToDiscIndicesVector_;
 }
 
@@ -92,8 +90,7 @@ void PieceStorage::SavePieceToDisk(const PiecePtr &piece) {
     piecesSavedToDiscIndicesVector_.push_back(piece->GetIndex());
     out_.seekp(piece->GetIndex() * tf_.pieceLength);
     out_.write(piece->GetData().data(), piece->GetData().size());
-//    out_.write("hello", 5);
     std::cout << "Saved to Disk piece " << piece->GetIndex() << std::endl;
-    std::cout << "Piece data length: " << piece->GetData().size() << std::endl;
+//    std::cout << "Piece data length: " << piece->GetData().size() << std::endl;
     std::cout << "PieceQueue size: " << remainPieces_.size() << std::endl;
 }

@@ -72,6 +72,7 @@ void TcpConnect::SendData(const std::string &data) const {
 
 
 std::string TcpConnect::ReceiveData(size_t bufferSize) const {
+//    this->stack++;
     struct pollfd pfd;
     pfd.fd = sockfd_;
     pfd.events = POLLIN;
@@ -124,6 +125,7 @@ std::string TcpConnect::ReceiveData(size_t bufferSize) const {
             len -= n;
         }
     }
+//    stack--;
     return data;
 }
 

@@ -4,7 +4,7 @@
 #include "peer.h"
 #include "torrent_file.h"
 #include "piece_storage.h"
-
+#include <atomic>
 /*
  * Структура, хранящая информацию о доступности частей скачиваемого файла у данного пира
  */
@@ -42,13 +42,13 @@ private:
  */
 class PeerConnect {
 public:
-    PeerConnect(const Peer& peer, const TorrentFile& tf, std::string selfPeerId, PieceStorage& pieceStorage);
+    PeerConnect(std::atomic<int>& peerscounter, const Peer& peer, const TorrentFile& tf, std::string selfPeerId, PieceStorage& pieceStorage);
 
     /*
      * Основная функция, в которой будет происходить цикл общения с пиром.
      * https://wiki.theory.org/BitTorrentSpecification#Messages
      */
-    void Run();
+    void Run(std::atomic<int>& cntstart, std::atomic<int>& cntend, std::atomic<int>& cntbegin);
 
     void Terminate();
 
@@ -58,6 +58,7 @@ public:
     bool Failed() const;
     const Peer& peerinfo;
 private:
+    std::atomic<int>& peerscounter_;
     const TorrentFile& tf_;
     TcpConnect socket_;  // tcp-соединение с пиром
     const std::string selfPeerId_;  // наш id, которым представляется наш клиент
@@ -85,7 +86,7 @@ private:
      * - Сообщить пиру, что мы готовы получать от него данные (отправить interested)
      * Возвращает true, если все три этапа прошли без ошибок
      */
-    bool EstablishConnection();
+    bool EstablishConnection(std::atomic<int>& check);
 
     /*
      * Функция читает из сокета bitfield с информацией о наличии у пира различных частей файла.
