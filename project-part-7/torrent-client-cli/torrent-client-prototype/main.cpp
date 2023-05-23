@@ -203,7 +203,6 @@ void TestTorrentFile(const fs::path& file) {
     std::cout << "Downloaded" << std::endl;
     CheckDownloadedPiecesIntegrity(outputDirectory / torrentFile.name, torrentFile, pieces);
     std::cout << "Checked" << std::endl;
-    DeleteDownloadedFile(outputDirectory / torrentFile.name);
 }
 int main(int argc, char* argv[]) {
     std::string path1;
@@ -251,8 +250,6 @@ int main(int argc, char* argv[]) {
     std::cout << "Path2: " << path2 << std::endl;
     percents = number;
     outputDirectory = path1;
-    for (const auto& entry : fs::directory_iterator(path2)) {
-        TestTorrentFile(entry.path());
-    }
+    TestTorrentFile(path2);
     return 0;
 }
