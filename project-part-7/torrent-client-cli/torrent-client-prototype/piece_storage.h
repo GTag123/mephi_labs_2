@@ -63,7 +63,8 @@ private:
     const TorrentFile& tf_;
     std::filesystem::path outputDirectory_;
     std::ofstream out_;
-    bool isOutputFileOpen_;;
+    bool isOutputFileOpen_;
+    size_t countOfPieces_;
 //    std::set<size_t> piecesSavedToDiscIndicesSet_;
     std::vector<size_t> piecesSavedToDiscIndicesVector_;
     mutable std::mutex mutex_;

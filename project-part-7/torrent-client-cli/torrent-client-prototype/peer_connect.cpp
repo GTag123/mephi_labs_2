@@ -50,6 +50,10 @@ void PeerConnect::Run() {
             } catch (const std::exception& e) {
                 std::cerr << "Exception: " << e.what() << std::endl;
             }
+            if (pieceInProgress_ != nullptr) {
+                pieceStorage_.AddPieceToQueue(pieceInProgress_);
+                pieceInProgress_ = nullptr;
+            }
         } else {
             std::cerr << "Cannot establish connection to peer" << std::endl;
             Terminate();
@@ -113,6 +117,10 @@ void PeerConnect::SendInterested() {
 void PeerConnect::Terminate() {
     std::cerr << "Terminate. Remain: " << --peerscounter_ << std::endl;
     terminated_ = true;
+    if (pieceInProgress_ != nullptr) {
+        pieceStorage_.AddPieceToQueue(pieceInProgress_);
+        pieceInProgress_ = nullptr;
+    }
 }
 
 void PeerConnect::MainLoop() {

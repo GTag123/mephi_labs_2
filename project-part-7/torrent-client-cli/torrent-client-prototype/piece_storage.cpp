@@ -5,15 +5,17 @@ PieceStorage::PieceStorage(const TorrentFile& tf, const std::filesystem::path& o
     tf_(tf),
     outputDirectory_(outputDirectory),
     out_(outputDirectory_ / tf_.name, std::ios::binary | std::ios::out),
-    isOutputFileOpen_(true) {
+    isOutputFileOpen_(true),
+    countOfPieces_(count) {
     out_.seekp(tf.length - 1);
     out_.write("\0", 1);
     std::cout << "OPENED STREAM: " << out_.is_open() << std::endl;
     std::cout << "NAME IS " << tf_.name << std::endl;
-    for (size_t i = 0; i < count; ++i) {
+    for (size_t i = 0; i < countOfPieces_; ++i) {
         size_t length = (i == tf.length / tf.pieceLength - 1) ? tf.length % tf.pieceLength : tf.pieceLength;
         remainPieces_.push(std::make_shared<Piece>(i, length, tf.pieceHashes[i]));
     }
+    std::cout << "QUEUE SIZE: " << remainPieces_.size()  << " " << count << std::endl;
 }
 
 
@@ -53,7 +55,7 @@ size_t PieceStorage::TotalPiecesCount() const {
 
 size_t PieceStorage::PiecesInProgressCount() const {
     std::lock_guard lock(mutex_);
-    return tf_.length / tf_.pieceLength - remainPieces_.size() - piecesSavedToDiscIndicesVector_.size();
+    return countOfPieces_ - remainPieces_.size() - piecesSavedToDiscIndicesVector_.size();
 }
 
 void PieceStorage::CloseOutputFile() {

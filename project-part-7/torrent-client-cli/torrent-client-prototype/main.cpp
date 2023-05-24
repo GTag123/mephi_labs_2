@@ -134,7 +134,7 @@ bool RunDownloadMultithread(PieceStorage& pieces, const TorrentFile& torrentFile
     }
 
     std::this_thread::sleep_for(10s);
-    while (pieces.PiecesSavedToDiscCount() < PiecesToDownload - 1) {
+    while (pieces.PiecesSavedToDiscCount() < PiecesToDownload) {
         if (pieces.PiecesInProgressCount() == 0) {
             std::cerr << "Want to download more pieces but all peer connections are not working. Let's request new peers" << std::endl;
             int termcount = 0;
@@ -150,9 +150,9 @@ bool RunDownloadMultithread(PieceStorage& pieces, const TorrentFile& torrentFile
         }
         std::cerr << "WHILE WHILE WHILE" << std::endl;
         std::cout << "InProgress: " << pieces.PiecesInProgressCount() << std::endl;
-        std::cout << pieces.PiecesSavedToDiscCount() << std::endl;
-        std::cout << pieces.GetQueueSize() << std::endl;
-        std::cout << PiecesToDownload << std::endl;
+        std::cout << "ToDownloadTotal: " << PiecesToDownload << std::endl;
+        std::cout << "SavedToDisk: " << pieces.PiecesSavedToDiscCount() << std::endl;
+        std::cout << "QueueSize: " << pieces.GetQueueSize() << std::endl;
         std::this_thread::sleep_for(1s);
     }
     std::cout << "!!!!!!!!!!!-----------------------" << std::endl << std::endl;
